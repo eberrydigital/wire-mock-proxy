@@ -2,10 +2,13 @@ package se.strawberry
 
 import EnvironmentConfig
 import EnvironmentConfig.requireTestKey
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock.*
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import org.slf4j.LoggerFactory
+import se.strawberry.transform.UpstreamPatchTransformer
 
 private val log = LoggerFactory.getLogger("Main")
 
@@ -22,28 +25,9 @@ fun main(args: Array<String>) {
     val adminBindAddress = argMap["adminBind"] ?: EnvironmentConfig.adminBindAddress
     val adminApiToken = argMap["adminToken"] ?: EnvironmentConfig.adminApiToken
 
-    // WireMock config
+    val mapper = ObjectMapper().registerModule(KotlinModule.Builder().build())
 
-    /**
-     * This object doesn't have adminBindAddress nor adminPort so this following part is ommited:
-     *   .adminBindAddress(adminBindAddress) // ⚠️ Admin bound to localhost by default for safety
-     *         .adminPort(adminPort)
-     *         // If you want to require a bearer-like API token on admin calls,
-     *         // enable the tokenAuthenticator (WireMock 3.x)
-     *         .apply {
-     *             if (!adminApiToken.isNullOrBlank()) {
-     *                 tokenAuthenticator { token -> token == adminApiToken }
-     *             }
-     *         }
-     *         .maxRequestJournalEntries(5000) // useful for waitForNextHit + auditing
-     *         .extensions(
-     *             // Register our custom response transformer (used in Milestone 4).
-     *             UpstreamPatchTransformer(ObjectMapper().registerModule(KotlinModule.Builder().build()))
-     *         )
-     *         :TODO find other way.
-     */
-
-    val config = options().bindAddress(bindAddress).port(port).maxRequestJournalEntries(5000)
+    val config = options().bindAddress(bindAddress).port(port).maxRequestJournalEntries(5000).extensions(UpstreamPatchTransformer(mapper))
 
 
     val server = WireMockServer(config)
@@ -72,8 +56,8 @@ fun main(args: Array<String>) {
 
     server.stubFor(
         any(urlMatching(".*")).atPriority(100).willReturn(
-                aResponse().proxiedFrom(proxyTarget) // transparent proxy
-            )
+            aResponse().proxiedFrom(proxyTarget) // transparent proxy
+        )
     )
 
     Runtime.getRuntime().addShutdownHook(Thread {
