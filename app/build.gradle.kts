@@ -24,7 +24,7 @@ dependencies {
     // This dependency is used by the application.
     implementation(libs.guava)
 
-    implementation("org.wiremock:wiremock:12.0.12")
+    implementation("org.wiremock:wiremock:3.0.3")
 
     // JSON handling
     implementation("com.fasterxml.jackson.core:jackson-databind:2.17.2")
@@ -48,9 +48,7 @@ java {
     }
 }
 
-application {
-    mainClass.set("com.acme.wiremock.MainKt")
-}
+application { mainClass.set("se.strawberry.MainKt") }
 
 kotlin {
     jvmToolchain {
