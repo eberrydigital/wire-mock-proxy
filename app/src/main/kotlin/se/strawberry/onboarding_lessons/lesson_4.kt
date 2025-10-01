@@ -9,12 +9,12 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import com.github.tomakehurst.wiremock.http.HttpHeader
 import com.github.tomakehurst.wiremock.http.HttpHeaders
 
-// -- Request Matching --
+// -- Priorities --
 
-// Starting from this lesson, every lesson will be a continuation of the previous one.
-// So, that you could track the changes and development of your WireMock project.
-// We also are going to use EnvironmentConfig instead of using hardcoded values.
-// We'll use regular expression so that any lesson number will match the stub.
+
+// In the previous lesson we encountered a situation where a more generic stub was matching requests and all the previous stabs were ignored.
+// We'll use priorities to solve this issue. Note the lower the number, the higher the priority.
+// We'll also use the wildcard regular expression so that anything that follows /lesson/ will match the stub.
 
 fun main() {
     val wireMockConfig = options()
@@ -34,15 +34,17 @@ fun main() {
     // Here we are adding new stubs
 
     server.givenThat(get(urlPathEqualTo("/lesson/2"))
+        .atPriority(1) // <— higher priority than the other two stubs
         .willReturn(
             aResponse()
                 .withStatus(200)
                 .withHeaders(headers)
-                .withBody("{\"message\": \"Hello from lesson_2\"}") // <- Pay attention that this body is never returned anymore; we'll address that in the next lesson
+                .withBody("{\"message\": \"Hello from lesson_2\"}")
         )
     )
 
     server.givenThat(get(urlPathMatching("/lesson/[0-9]+$")) // <— regular expression to match any lesson number
+        .atPriority(2)
         .willReturn(
             aResponse()
                 .withStatus(200)
@@ -50,4 +52,16 @@ fun main() {
                 .withBody("{\"message\": \"No matter what lesson number you request, you'll see me\"}")
         )
     )
+
+    server.givenThat(get(urlPathMatching("/lesson/.*")) // <— regular expression to match anything that follows /lesson/
+        .atPriority(3) // <— lowest priority
+        .willReturn(
+            aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type", "application/json")
+                .withBody("{\"message\": \"No matter what follows /lesson you'll see me\"}")
+        )
+    )
 }
+
+// If you run the server and execute requests GET /lesson/2 that matches all three stubs, the one with higher priority will be returned.
