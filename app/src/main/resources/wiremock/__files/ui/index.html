@@ -63,50 +63,74 @@
         const p = $('#f-path').value.trim();
         const s = $('#f-status').value.trim();
         const l = $('#f-limit').value.trim();
-        const internal = $('#f-internal').checked;                 // <-- (1) читаем чекбокс
+        const internal = $('#f-internal').checked;
 
         if(m) params.set('method', m);
         if(p) params.set('path', p);
         if(s) params.set('status', s);
         if(l) params.set('limit', l);
-        if(internal) params.set('internal', '1');                  // <-- (2) добавляем параметр
+        if(internal) params.set('internal', '1');
 
         const qs = params.toString();
-        // console.debug('load /requests?' + qs);                  // <-- (3) можно раскомментить для отладки
+        console.debug('load /requests?' + qs);
 
         const data = await api('/requests?' + qs);
         tbody.innerHTML = '';
         data.forEach(row => {
           const tr = document.createElement('tr');
-          tr.innerHTML = `<td class="muted">${new Date(row.receivedAt).toLocaleTimeString()}</td>
-                          <td>${row.request.method}</td>
-                          <td class="url" title="${row.request.url}">${row.request.url}</td>
-                          <td>${row.response.status ?? ''}</td>
-                          <td>${row.timingMs ?? ''}</td>`;
+
+          const tdTime = document.createElement('td');
+          tdTime.className = 'muted';
+          tdTime.textContent = new Date(row.receivedAt).toLocaleTimeString();
+
+          const tdMethod = document.createElement('td');
+          tdMethod.textContent = row.request.method;
+
+          const tdUrl = document.createElement('td');
+          tdUrl.className = 'url';
+          tdUrl.title = row.request.url;
+          tdUrl.textContent = row.request.url;
+
+          const tdStatus = document.createElement('td');
+          tdStatus.textContent = (row.response.status ?? '').toString();
+
+          const tdMs = document.createElement('td');
+          tdMs.textContent = (row.timingMs ?? '').toString();
+
+          tr.append(tdTime, tdMethod, tdUrl, tdStatus, tdMs);
           tr.addEventListener('click', () => show(row.id));
           tbody.appendChild(tr);
         });
       }
 
-      async function show(id){
-        const row = await api('/requests/' + id);
-        det.innerHTML = `
-          <h3>Request ${row.request.method} ${row.request.url}</h3>
-          <div class="two">
-            <div>
-              <h4>Request headers</h4>
-              <pre>${JSON.stringify(row.request.headers, null, 2)}</pre>
-              <h4>Request body</h4>
-              <pre>${row.request.body ?? ''}</pre>
-            </div>
-            <div>
-              <h4>Response ${row.response.status}</h4>
-              <pre>${JSON.stringify(row.response.headers, null, 2)}</pre>
-              <h4>Response body</h4>
-              <pre>${row.response.body ?? ''}</pre>
-            </div>
-          </div>`;
-      }
+      async function show(id) {
+      const row = await api('/requests/' + id);
+      const wrap = document.createElement('div');
+      wrap.innerHTML = `
+        <h3>Request ${row.request.method} ${row.request.url}</h3>
+        <div class="two">
+          <div>
+            <h4>Request headers</h4>
+            <pre id="req-h"></pre>
+            <h4>Request body</h4>
+            <pre id="req-b"></pre>
+          </div>
+          <div>
+            <h4>Response ${row.response.status}</h4>
+            <pre id="res-h"></pre>
+            <h4>Response body</h4>
+            <pre id="res-b"></pre>
+          </div>
+        </div>`;
+
+      wrap.querySelector('#req-h').textContent = JSON.stringify(row.request.headers, null, 2);
+      wrap.querySelector('#req-b').textContent = row.request.body ?? '';
+      wrap.querySelector('#res-h').textContent = JSON.stringify(row.response.headers, null, 2);
+      wrap.querySelector('#res-b').textContent = row.response.body ?? '';
+
+      det.innerHTML = '';
+      det.appendChild(wrap);
+    }
 
       $('#btn-apply').addEventListener('click', load);
       $('#btn-clear').addEventListener('click', async () => {
@@ -115,7 +139,6 @@
         await load();
       });
 
-      // 🔥 обновляем список при переключении чекбокса
       $('#f-internal').addEventListener('change', load);
 
       load();
