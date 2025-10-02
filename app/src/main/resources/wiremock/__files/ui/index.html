@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>WireMock Proxy – Requests</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <style>
+        body { font: 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Arial; margin: 16px; }
+        .row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+        input, select, button { padding: 6px 8px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border-bottom: 1px solid #eee; padding: 6px 8px; text-align: left; white-space: nowrap; }
+        td.url { max-width: 720px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        pre { background: #fafafa; border: 1px solid #eee; padding: 8px; overflow: auto; }
+        .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .muted { color: #666; }
+    </style>
+</head>
+<body>
+<h2>WireMock Proxy · Requests</h2>
+
+<div class="row">
+    <label>Method <select id="f-method">
+        <option value="">ANY</option><option>GET</option><option>POST</option>
+        <option>PUT</option><option>DELETE</option><option>PATCH</option><option>OPTIONS</option>
+    </select></label>
+    <label>Path <input id="f-path" placeholder="/api/..." size="28"/></label>
+    <label>Status <input id="f-status" placeholder="200" size="6"/></label>
+    <label>Limit <input id="f-limit" value="200" size="6"/></label>
+    <button id="btn-apply">Apply</button>
+    <button id="btn-clear">Clear log</button>
+    <a id="btn-export" href="/_proxy-api/export" download>Export JSONL</a>
+</div>
+
+<table id="tbl">
+    <thead><tr><th>Time</th><th>Method</th><th class="url">URL</th><th>Status</th><th>ms</th></tr></thead>
+    <tbody></tbody>
+</table>
+
+<div id="details"></div>
+
+<script>
+    (function(){
+      const qp = new URLSearchParams(location.search);
+      const token = qp.get('token');
+      const authHeader = token ? { 'Authorization': 'Bearer ' + token } : {};
+
+      const $ = sel => document.querySelector(sel);
+      const tbody = $('#tbl tbody');
+      const det = $('#details');
+
+      async function api(path, opts={}) {
+        opts.headers = Object.assign({'Accept':'application/json'}, authHeader, opts.headers||{});
+        const res = await fetch('/_proxy-api' + path, opts);
+        if (!res.ok) { throw new Error(await res.text()); }
+        return await res.json();
+      }
+
+      async function load() {
+        const params = new URLSearchParams();
+        const m = $('#f-method').value, p = $('#f-path').value.trim(),
+              s = $('#f-status').value.trim(), l = $('#f-limit').value.trim();
+        if (m) params.set('method', m);
+        if (p) params.set('path', p);
+        if (s) params.set('status', s);
+        if (l) params.set('limit', l);
+
+        const data = await api('/requests?' + params.toString());
+        tbody.innerHTML = '';
+        data.forEach(row => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td class="muted">${new Date(row.receivedAt).toLocaleTimeString()}</td>
+                          <td>${row.request.method}</td>
+                          <td class="url" title="${row.request.url}">${row.request.url}</td>
+                          <td>${row.response.status ?? ''}</td>
+                          <td>${row.timingMs ?? ''}</td>`;
+          tr.addEventListener('click', () => show(row.id));
+          tbody.appendChild(tr);
+        });
+      }
+
+      async function show(id) {
+        const row = await api('/requests/' + id);
+        det.innerHTML = `
+          <h3>Request ${row.request.method} ${row.request.url}</h3>
+          <div class="two">
+            <div>
+              <h4>Request headers</h4>
+              <pre>${JSON.stringify(row.request.headers, null, 2)}</pre>
+              <h4>Request body</h4>
+              <pre>${row.request.body ?? ''}</pre>
+            </div>
+            <div>
+              <h4>Response ${row.response.status}</h4>
+              <pre>${JSON.stringify(row.response.headers, null, 2)}</pre>
+              <h4>Response body</h4>
+              <pre>${row.response.body ?? ''}</pre>
+            </div>
+          </div>`;
+      }
+
+      $('#btn-apply').addEventListener('click', load);
+      $('#btn-clear').addEventListener('click', async () => {
+        await fetch('/_proxy-api/requests/clear', { method:'POST', headers: authHeader });
+        det.innerHTML = ''; await load();
+      });
+
+      load();
+      setInterval(load, 3000);
+    })();
+</script>
+</body>
+</html>
