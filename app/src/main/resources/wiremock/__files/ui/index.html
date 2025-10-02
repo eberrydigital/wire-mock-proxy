@@ -29,6 +29,7 @@
     <label>Limit <input id="f-limit" value="200" size="6"/></label>
     <button id="btn-apply">Apply</button>
     <button id="btn-clear">Clear log</button>
+    <label><input type="checkbox" id="f-internal"/> Show internal</label>
     <a id="btn-export" href="/_proxy-api/export" download>Export JSONL</a>
 </div>
 
@@ -49,23 +50,31 @@
       const tbody = $('#tbl tbody');
       const det = $('#details');
 
-      async function api(path, opts={}) {
+      async function api(path, opts={}){
         opts.headers = Object.assign({'Accept':'application/json'}, authHeader, opts.headers||{});
         const res = await fetch('/_proxy-api' + path, opts);
-        if (!res.ok) { throw new Error(await res.text()); }
+        if(!res.ok){ throw new Error(await res.text()); }
         return await res.json();
       }
 
-      async function load() {
+      async function load(){
         const params = new URLSearchParams();
-        const m = $('#f-method').value, p = $('#f-path').value.trim(),
-              s = $('#f-status').value.trim(), l = $('#f-limit').value.trim();
-        if (m) params.set('method', m);
-        if (p) params.set('path', p);
-        if (s) params.set('status', s);
-        if (l) params.set('limit', l);
+        const m = $('#f-method').value;
+        const p = $('#f-path').value.trim();
+        const s = $('#f-status').value.trim();
+        const l = $('#f-limit').value.trim();
+        const internal = $('#f-internal').checked;                 // <-- (1) читаем чекбокс
 
-        const data = await api('/requests?' + params.toString());
+        if(m) params.set('method', m);
+        if(p) params.set('path', p);
+        if(s) params.set('status', s);
+        if(l) params.set('limit', l);
+        if(internal) params.set('internal', '1');                  // <-- (2) добавляем параметр
+
+        const qs = params.toString();
+        // console.debug('load /requests?' + qs);                  // <-- (3) можно раскомментить для отладки
+
+        const data = await api('/requests?' + qs);
         tbody.innerHTML = '';
         data.forEach(row => {
           const tr = document.createElement('tr');
@@ -79,7 +88,7 @@
         });
       }
 
-      async function show(id) {
+      async function show(id){
         const row = await api('/requests/' + id);
         det.innerHTML = `
           <h3>Request ${row.request.method} ${row.request.url}</h3>
@@ -102,8 +111,12 @@
       $('#btn-apply').addEventListener('click', load);
       $('#btn-clear').addEventListener('click', async () => {
         await fetch('/_proxy-api/requests/clear', { method:'POST', headers: authHeader });
-        det.innerHTML = ''; await load();
+        det.innerHTML = '';
+        await load();
       });
+
+      // 🔥 обновляем список при переключении чекбокса
+      $('#f-internal').addEventListener('change', load);
 
       load();
       setInterval(load, 3000);

@@ -8,7 +8,7 @@ import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock.*
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import org.slf4j.LoggerFactory
-import se.strawberry.admin.RequestsApiTransformer
+import se.strawberry.transform.RequestsApiTransformer
 import se.strawberry.admin.ServerRef
 import se.strawberry.transform.UpstreamPatchTransformer
 import java.nio.file.Files
