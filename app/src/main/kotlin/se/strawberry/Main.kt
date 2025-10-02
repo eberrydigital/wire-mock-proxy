@@ -31,7 +31,8 @@ fun main(args: Array<String>) {
     val bindAddress = argMap["bind"] ?: EnvironmentConfig.bindAddress
     val adminBindAddress = argMap["adminBind"] ?: EnvironmentConfig.adminBindAddress
     val adminApiToken = argMap["adminToken"] ?: EnvironmentConfig.adminApiToken
-    val wireMockFiles = Paths.get("app/src/main/resources/wiremock").toAbsolutePath()
+    val wireMockFiles = Paths.get("app/src/main/resources/wiremock")
+        .toAbsolutePath()
     Files.createDirectories(wireMockFiles.resolve("mappings"))
     Files.createDirectories(wireMockFiles.resolve("__files"))
 
@@ -59,6 +60,39 @@ fun main(args: Array<String>) {
         adminBindAddress,
         requireTestKey,
         !adminApiToken.isNullOrBlank()
+    )
+
+// HTML
+    server.stubFor(
+        get(urlEqualTo("/_proxy-ui")).atPriority(1)
+            .willReturn(aResponse()
+                .withHeader("Content-Type", "text/html; charset=utf-8")
+                .withHeader("Cache-Control", "no-store")
+                .withBodyFile("ui/index.html")
+            )
+    )
+
+
+// So that CSS is not proxied :TODO write a better solution for it, maybe through transformer
+    server.stubFor(
+        get(urlEqualTo("/_proxy-ui/assets/styles.css")).atPriority(1)
+            .willReturn(
+                aResponse()
+                    .withHeader("Content-Type", "text/css; charset=utf-8")
+                    .withHeader("Cache-Control", "public, max-age=31536000, immutable")
+                    .withBodyFile("ui/assets/styles.css")
+            )
+    )
+
+// So that JS is not proxied
+    server.stubFor(
+        get(urlEqualTo("/_proxy-ui/assets/app.js")).atPriority(1)
+            .willReturn(
+                aResponse()
+                    .withHeader("Content-Type", "application/javascript; charset=utf-8")
+                    .withHeader("Cache-Control", "public, max-age=31536000, immutable")
+                    .withBodyFile("ui/assets/app.js")
+            )
     )
 
     server.stubFor(
