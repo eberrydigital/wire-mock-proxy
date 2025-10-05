@@ -9,9 +9,9 @@ import se.strawberry.common.ListenerNames
 import se.strawberry.common.MetadataKeys
 
 
-class OneShotServeEventListener() : ServeEventListener {
+class EphemeralServeEventListener() : ServeEventListener {
 
-    override fun getName(): String = ListenerNames.ONE_SHOT
+    override fun getName(): String = ListenerNames.EPHEMERAL_LISTENER
 
     override fun afterComplete(serveEvent: ServeEvent, parameters: Parameters) {
         val mapping = serveEvent.stubMapping ?: return
@@ -22,7 +22,7 @@ class OneShotServeEventListener() : ServeEventListener {
             is String -> v.toLongOrNull() ?: 0L
             else -> 0L
         }
-        val usesLeft: Int = when (val v = md["remainingUses"]) {
+        val usesLeft: Int = when (val v = md[MetadataKeys.REMAINING_USES]) {
             is Number -> v.toInt()
             is String -> v.toIntOrNull() ?: -1
             else -> -1
@@ -41,7 +41,7 @@ class OneShotServeEventListener() : ServeEventListener {
             } else {
                 val newMd = Metadata.metadata()
                     .apply {
-                        attr("remainingUses", next)
+                        attr(MetadataKeys.REMAINING_USES, next)
                         if (expiresAtMs > 0) attr(MetadataKeys.EXPIRES_AT, expiresAtMs)
                     }
                     .build()

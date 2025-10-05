@@ -14,7 +14,7 @@ import se.strawberry.common.Paths.UI_ASSETS_PREFIX
 import se.strawberry.common.Paths.UI_ROOT
 import se.strawberry.common.Priorities.PROXY_FALLBACK
 import se.strawberry.common.Priorities.UI
-import se.strawberry.extensions.listeners.OneShotServeEventListener
+import se.strawberry.extensions.listeners.EphemeralServeEventListener
 import se.strawberry.extensions.matchers.TtlGuardMatcher
 import se.strawberry.extensions.transformers.UpstreamPatchTransformer
 import java.nio.file.Files
@@ -45,7 +45,7 @@ fun main(args: Array<String>) {
         .port(port)
         .maxRequestJournalEntries(5000)
         .usingFilesUnderDirectory(wireMockFiles.toString())
-        .extensions(UpstreamPatchTransformer(mapper), RequestsApiTransformer(),  OneShotServeEventListener(),
+        .extensions(UpstreamPatchTransformer(mapper), RequestsApiTransformer(),  EphemeralServeEventListener(),
             TtlGuardMatcher()
         )
 

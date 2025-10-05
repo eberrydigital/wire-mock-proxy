@@ -1,7 +1,7 @@
 package se.strawberry.common
 
 object ListenerNames {
-    const val ONE_SHOT = "one-shot"
+    const val EPHEMERAL_LISTENER = "ephemeral-listener"
 }
 
 object MatcherNames {

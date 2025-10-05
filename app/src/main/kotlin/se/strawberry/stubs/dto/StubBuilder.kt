@@ -108,20 +108,13 @@ object StubBuilder {
             }
         }
 
-        val needsOneShot = (dto.ephemeral?.uses != null) || (dto.ephemeral?.ttlMs != null)
-
-        if (needsOneShot) {
-            mappingBuilder.withServeEventListener(ListenerNames.ONE_SHOT, Parameters.empty())
-        }
-
-
         var builder = mappingBuilder.atPriority(dto.priority ?: 2)
             .willReturn(rb)
 
         val expiresAtMs: Long? = dto.ephemeral?.ttlMs?.let { System.currentTimeMillis() + it }
         expiresAtMs?.let { builder = builder.andMatching(MatcherNames.TTL_GUARD, Parameters.one("expiresAtMs", it)) }
         if (dto.ephemeral?.uses != null || expiresAtMs != null) {
-            builder = builder.withServeEventListener(ListenerNames.ONE_SHOT, Parameters.empty())
+            builder = builder.withServeEventListener(ListenerNames.EPHEMERAL_LISTENER, Parameters.empty())
         }
 
         val stub = builder.build()

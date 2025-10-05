@@ -12,6 +12,7 @@ import se.strawberry.common.Json
 import se.strawberry.common.Paths
 import se.strawberry.common.TransformerNames
 import se.strawberry.config.EnvironmentConfig
+import se.strawberry.maintenance.EphemeralCleaner
 
 class RequestsApiTransformer : ResponseTransformerV2 {
 
@@ -35,6 +36,8 @@ class RequestsApiTransformer : ResponseTransformerV2 {
                     .build()
             }
         }
+
+        EphemeralCleaner.pruneNow()
 
         val url = req.url
         if (!url.startsWith(Paths.API_PREFIX)) return response
