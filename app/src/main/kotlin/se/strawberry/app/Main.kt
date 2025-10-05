@@ -1,21 +1,24 @@
-package se.strawberry
+package se.strawberry.app
 
-import EnvironmentConfig
-import EnvironmentConfig.requireTestKey
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.KotlinModule
+import se.strawberry.config.EnvironmentConfig
+import se.strawberry.config.EnvironmentConfig.requireTestKey
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock.*
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import org.slf4j.LoggerFactory
-import se.strawberry.transform.RequestsApiTransformer
+import se.strawberry.api.RequestsApiTransformer
 import se.strawberry.admin.ServerRef
-import se.strawberry.stubs.OneShotServeEventListener
-import se.strawberry.stubs.TtlGuardMatcher
-import se.strawberry.transform.UpstreamPatchTransformer
+import se.strawberry.common.Json
+import se.strawberry.common.Paths.API_PREFIX
+import se.strawberry.common.Paths.UI_ASSETS_PREFIX
+import se.strawberry.common.Paths.UI_ROOT
+import se.strawberry.common.Priorities.PROXY_FALLBACK
+import se.strawberry.common.Priorities.UI
+import se.strawberry.extensions.listeners.OneShotServeEventListener
+import se.strawberry.extensions.matchers.TtlGuardMatcher
+import se.strawberry.extensions.transformers.UpstreamPatchTransformer
 import java.nio.file.Files
 import java.nio.file.Paths
-
 
 private val log = LoggerFactory.getLogger("Main")
 
@@ -24,8 +27,7 @@ fun main(args: Array<String>) {
         val parts = it.removePrefix("--")
             .split("=", limit = 2)
         if (parts.size == 2) parts[0] to parts[1] else null
-    }
-        .toMap()
+    }.toMap()
 
     val proxyTarget = argMap["target"] ?: EnvironmentConfig.proxyTarget
     val port = (argMap["port"] ?: EnvironmentConfig.port.toString()).toInt()
@@ -33,14 +35,11 @@ fun main(args: Array<String>) {
     val bindAddress = argMap["bind"] ?: EnvironmentConfig.bindAddress
     val adminBindAddress = argMap["adminBind"] ?: EnvironmentConfig.adminBindAddress
     val adminApiToken = argMap["adminToken"] ?: EnvironmentConfig.adminApiToken
-    val wireMockFiles = Paths.get("app/src/main/resources/wiremock")
-        .toAbsolutePath()
+    val wireMockFiles = Paths.get("app/src/main/resources/wiremock").toAbsolutePath()
     Files.createDirectories(wireMockFiles.resolve("mappings"))
     Files.createDirectories(wireMockFiles.resolve("__files"))
 
-    val mapper = ObjectMapper().registerModule(KotlinModule.Builder()
-        .build()
-    )
+    val mapper = Json.mapper
 
     val config = options().bindAddress(bindAddress)
         .port(port)
@@ -69,7 +68,7 @@ fun main(args: Array<String>) {
 
 // HTML
     server.stubFor(
-        get(urlEqualTo("/_proxy-ui")).atPriority(1)
+        get(urlEqualTo(UI_ROOT)).atPriority(UI)
             .willReturn(aResponse()
                 .withHeader("Content-Type", "text/html; charset=utf-8")
                 .withHeader("Cache-Control", "no-store")
@@ -80,7 +79,7 @@ fun main(args: Array<String>) {
 
 // So that CSS is not proxied :TODO write a better solution for it, maybe through transformer
     server.stubFor(
-        get(urlEqualTo("/_proxy-ui/assets/styles.css")).atPriority(1)
+        get(urlEqualTo("$UI_ASSETS_PREFIX/styles.css")).atPriority(UI)
             .willReturn(
                 aResponse()
                     .withHeader("Content-Type", "text/css; charset=utf-8")
@@ -91,7 +90,7 @@ fun main(args: Array<String>) {
 
 // So that JS is not proxied
     server.stubFor(
-        get(urlEqualTo("/_proxy-ui/assets/app.js")).atPriority(1)
+        get(urlEqualTo("$UI_ASSETS_PREFIX/app.js")).atPriority(UI)
             .willReturn(
                 aResponse()
                     .withHeader("Content-Type", "application/javascript; charset=utf-8")
@@ -101,7 +100,7 @@ fun main(args: Array<String>) {
     )
 
     server.stubFor(
-        get(urlEqualTo("/_proxy-ui")).atPriority(1)
+        get(urlEqualTo(UI_ROOT)).atPriority(UI)
             .willReturn(
                 aResponse()
                     .withHeader("Content-Type", "text/html; charset=utf-8")
@@ -111,7 +110,7 @@ fun main(args: Array<String>) {
 
 
     server.stubFor(
-        any(urlPathMatching("/_proxy-api/.*")).atPriority(1)
+        any(urlPathMatching("${API_PREFIX}/.*")).atPriority(UI)
             .willReturn(
                 aResponse()
                     .withStatus(200)
@@ -122,7 +121,7 @@ fun main(args: Array<String>) {
     if (requireTestKey) {
         server.stubFor(
             any(urlMatching(".*")).withHeader("X-Test-Run-Id", absent()) // <— THIS is the correct "absent" matcher
-                .atPriority(1)                          // higher priority than the catch-all proxy
+                .atPriority(UI)                          // higher priority than the catch-all proxy
                 .willReturn(
                     aResponse().withStatus(400)
                         .withHeader("Content-Type", "application/json")
@@ -132,7 +131,7 @@ fun main(args: Array<String>) {
     }
 
     server.stubFor(
-        any(urlMatching(".*")).atPriority(100)
+        any(urlMatching(".*")).atPriority(PROXY_FALLBACK)
             .willReturn(
                 aResponse().proxiedFrom(proxyTarget) // transparent proxy
             )

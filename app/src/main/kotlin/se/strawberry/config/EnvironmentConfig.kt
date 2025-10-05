@@ -1,3 +1,5 @@
+package se.strawberry.config
+
 object EnvironmentConfig {
     // We read configuration primarily from environment variables.
     // CLI flags are also supported as a simple override for local runs/CI scripts.

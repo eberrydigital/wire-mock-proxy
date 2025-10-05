@@ -1,7 +1,8 @@
-package se.strawberry.transform
+package se.strawberry.extensions.transformers
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.ObjectNode
 import com.github.fge.jsonpatch.JsonPatch
 import com.github.fge.jsonpatch.JsonPatchException
 import com.github.tomakehurst.wiremock.extension.Parameters
@@ -11,6 +12,8 @@ import com.github.tomakehurst.wiremock.http.HttpHeaders
 import com.github.tomakehurst.wiremock.http.Response
 import com.github.tomakehurst.wiremock.stubbing.ServeEvent
 import org.slf4j.LoggerFactory
+import se.strawberry.common.TransformerNames
+import kotlin.collections.get
 
 
 private object ParamKeys {
@@ -26,7 +29,7 @@ class UpstreamPatchTransformer(
 
     private val log = LoggerFactory.getLogger(UpstreamPatchTransformer::class.java)
 
-    override fun getName(): String = "upstream-patch"
+    override fun getName(): String = TransformerNames.UPSTREAM_PATCH
     override fun applyGlobally(): Boolean = false
 
     override fun transform(response: Response, serveEvent: ServeEvent): Response? {
@@ -153,14 +156,14 @@ object JsonMerge {
                 val k = entry.key
                 val v = entry.value
                 if (v.isNull) {
-                    if (result.isObject) (result as com.fasterxml.jackson.databind.node.ObjectNode).remove(k)
+                    if (result.isObject) (result as ObjectNode).remove(k)
                 } else {
                     val existing = result.get(k)
                     if (existing != null && existing.isObject && v.isObject) {
                         val merged = merge(existing, v)
-                        (result as com.fasterxml.jackson.databind.node.ObjectNode).set<JsonNode>(k, merged)
+                        (result as ObjectNode).set<JsonNode>(k, merged)
                     } else {
-                        (result as com.fasterxml.jackson.databind.node.ObjectNode).set<JsonNode>(k, v)
+                        (result as ObjectNode).set<JsonNode>(k, v)
                     }
                 }
             }

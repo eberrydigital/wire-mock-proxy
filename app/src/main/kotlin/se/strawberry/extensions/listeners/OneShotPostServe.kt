@@ -1,21 +1,23 @@
-package se.strawberry.stubs
+package se.strawberry.extensions.listeners
 
 import com.github.tomakehurst.wiremock.extension.Parameters
 import com.github.tomakehurst.wiremock.extension.ServeEventListener
 import com.github.tomakehurst.wiremock.stubbing.ServeEvent
 import com.github.tomakehurst.wiremock.common.Metadata
 import se.strawberry.admin.ServerRef
+import se.strawberry.common.ListenerNames
+import se.strawberry.common.MetadataKeys
 
 
 class OneShotServeEventListener() : ServeEventListener {
 
-    override fun getName(): String = "one-shot"
+    override fun getName(): String = ListenerNames.ONE_SHOT
 
     override fun afterComplete(serveEvent: ServeEvent, parameters: Parameters) {
         val mapping = serveEvent.stubMapping ?: return
         val md: Metadata = mapping.metadata ?: return
 
-        val expiresAtMs: Long = when (val v = md["expiresAt"]) {
+        val expiresAtMs: Long = when (val v = md[MetadataKeys.EXPIRES_AT]) {
             is Number -> v.toLong()
             is String -> v.toLongOrNull() ?: 0L
             else -> 0L
@@ -40,7 +42,7 @@ class OneShotServeEventListener() : ServeEventListener {
                 val newMd = Metadata.metadata()
                     .apply {
                         attr("remainingUses", next)
-                        if (expiresAtMs > 0) attr("expiresAt", expiresAtMs)
+                        if (expiresAtMs > 0) attr(MetadataKeys.EXPIRES_AT, expiresAtMs)
                     }
                     .build()
                 mapping.metadata = newMd
