@@ -5,6 +5,7 @@ import com.github.tomakehurst.wiremock.client.MappingBuilder
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder
 import com.github.tomakehurst.wiremock.client.WireMock.*
 import com.github.tomakehurst.wiremock.common.Metadata
+import com.github.tomakehurst.wiremock.extension.Parameters
 import com.github.tomakehurst.wiremock.matching.UrlPattern
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 
@@ -151,7 +152,6 @@ fun buildStubMapping(dto: CreateStubRequest, proxiedTarget: String?): StubMappin
     val rb = ResponseDefinitionBuilder().withStatus(dto.response.status)
     dto.response.headers.forEach { (k, v) -> rb.withHeader(k, v) }
 
-
     when (dto.response.mode) {
         RespMode.STATIC -> {
             when {
@@ -164,7 +164,6 @@ fun buildStubMapping(dto: CreateStubRequest, proxiedTarget: String?): StubMappin
 
                 dto.response.bodyText != null -> rb.withBody(dto.response.bodyText)
             }
-            rb.withTransformers("one-shot-postserve")
         }
 
         RespMode.PATCH_UPSTREAM -> {
@@ -174,20 +173,33 @@ fun buildStubMapping(dto: CreateStubRequest, proxiedTarget: String?): StubMappin
         }
     }
 
-    val stub = mappingBuilder.atPriority(dto.priority ?: 2)
-        .willReturn(rb)
-        .build()
-
-    val mdMap = mutableMapOf<String, Any>()
-    dto.ephemeral?.uses?.let { mdMap["remainingUses"] = it }
-    dto.ephemeral?.ttlMs?.let { ttl -> mdMap["expiresAt"] = System.currentTimeMillis() + ttl }
-
-    if (mdMap.isNotEmpty()) {
-        val metaBuilder = Metadata.metadata()
-        mdMap["remainingUses"]?.let { metaBuilder.attr("remainingUses", it) }
-        mdMap["expiresAt"]?.let { metaBuilder.attr("expiresAt", it) }
-        stub.metadata = metaBuilder.build()
+    val needsOneShot = (dto.ephemeral?.uses != null) || (dto.ephemeral?.ttlMs != null)
+    if (needsOneShot) {
+        mappingBuilder.withServeEventListener("one-shot", Parameters.empty())
     }
+
+
+    var builder = mappingBuilder.atPriority(dto.priority ?: 2)
+        .willReturn(rb)
+
+    val expiresAtMs: Long? = dto.ephemeral?.ttlMs?.let { System.currentTimeMillis() + it }
+    expiresAtMs?.let {  builder = builder.andMatching("ttl-guard", Parameters.one("expiresAtMs", it)) }
+    if (dto.ephemeral?.uses != null || expiresAtMs != null) {
+        builder = builder.withServeEventListener("one-shot", Parameters.empty())
+    }
+
+
+    val stub = builder.build()
+
+
+    val md = Metadata.metadata()
+        .apply {
+            dto.ephemeral?.uses?.let { attr("remainingUses", it) }
+            dto.ephemeral?.ttlMs?.let { ttl -> attr("expiresAt", System.currentTimeMillis() + ttl) }
+        }
+        .build()
+    stub.metadata = md
+
     return stub
 }
 

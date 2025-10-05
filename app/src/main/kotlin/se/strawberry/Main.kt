@@ -10,6 +10,8 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import org.slf4j.LoggerFactory
 import se.strawberry.transform.RequestsApiTransformer
 import se.strawberry.admin.ServerRef
+import se.strawberry.stubs.OneShotServeEventListener
+import se.strawberry.stubs.TtlGuardMatcher
 import se.strawberry.transform.UpstreamPatchTransformer
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -44,7 +46,10 @@ fun main(args: Array<String>) {
         .port(port)
         .maxRequestJournalEntries(5000)
         .usingFilesUnderDirectory(wireMockFiles.toString())
-        .extensions(UpstreamPatchTransformer(mapper), RequestsApiTransformer())
+        .extensions(UpstreamPatchTransformer(mapper), RequestsApiTransformer(),  OneShotServeEventListener(),
+            TtlGuardMatcher()
+        )
+
 
 
     val server = WireMockServer(config)

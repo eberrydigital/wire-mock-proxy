@@ -2,6 +2,7 @@ package se.strawberry.transform
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.tomakehurst.wiremock.extension.ResponseTransformerV2
 import com.github.tomakehurst.wiremock.http.HttpHeader
 import com.github.tomakehurst.wiremock.http.HttpHeaders
@@ -9,6 +10,8 @@ import com.github.tomakehurst.wiremock.http.Request
 import com.github.tomakehurst.wiremock.http.Response
 import com.github.tomakehurst.wiremock.stubbing.ServeEvent
 import se.strawberry.admin.ServerRef
+import se.strawberry.stubs.CreateStubRequest
+import se.strawberry.stubs.buildStubMapping
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
 
@@ -47,6 +50,27 @@ class RequestsApiTransformer : ResponseTransformerV2 {
             route == "/requests" -> handleList(query)
             route == "/requests/clear" && req.method.value() == "POST" -> handleClear()
             route == "/export" -> handleExport()
+            route == "/stubs" && serveEvent.request.method.value() == "POST" -> {
+                val body = serveEvent.request.bodyAsString
+                return Response.response()
+                    .status(201)
+                    .headers(jsonHeaders())
+                    .body(handleCreateStub(body))
+                    .build()
+            }
+            route == "/stubs" && serveEvent.request.method.value() == "GET" -> {
+                return Response.response()
+                    .status(200)
+                    .headers(jsonHeaders())
+                    .body(handleListStubs())
+                    .build()
+            }
+            route.startsWith("/stubs/") && serveEvent.request.method.value() == "DELETE" -> {
+                val id = route.removePrefix("/stubs/").trim('/')
+                val ok = handleDeleteStub(id)
+                return if (ok) Response.response().status(204).build()
+                else Response.response().status(404).headers(jsonHeaders()).body("""{"error":"not_found"}""").build()
+            }
             route.startsWith("/requests/") -> {
                 val id = route.removePrefix("/requests/")
                     .trim('/')
@@ -228,4 +252,44 @@ class RequestsApiTransformer : ResponseTransformerV2 {
         url.startsWith("/_proxy-api") ||
                 url == "/_proxy-ui" ||
                 url.startsWith("/__admin")
+
+    private fun handleCreateStub(body: String): String {
+        val dto: CreateStubRequest = mapper.readValue(body)
+        val proxyTarget = EnvironmentConfig.proxyTarget
+        val stub = buildStubMapping(dto, proxyTarget)
+        ServerRef.server.addStubMapping(stub)
+
+        val md = stub.metadata
+        val usesLeft: Int?   = md?.let { (it["remainingUses"] as? Number)?.toInt() }
+        val expiresAt: Long? = md?.let { (it["expiresAt"]     as? Number)?.toLong() }
+        val payload = mapOf(
+            "id" to stub.id,
+            "summary" to "${dto.request.method} ${dto.request.url.value}",
+            "usesLeft" to usesLeft,
+            "expiresAt" to expiresAt
+        )
+        return mapper.writeValueAsString(payload)
+    }
+
+    private fun handleListStubs(): String {
+        val list = ServerRef.server.listAllStubMappings().mappings.map { sm ->
+            mapOf(
+                "id" to sm.id,
+                "priority" to sm.priority,
+                "request" to sm.request?.url,
+                "method" to sm.request?.method?.value(),
+                "usesLeft" to sm.metadata?.getInt("remainingUses"),
+                "expiresAt" to sm.metadata?.let { it["expiresAt"] as? Number }?.toLong()
+            )
+        }
+        return mapper.writeValueAsString(list)
+    }
+
+    private fun handleDeleteStub(id: String): Boolean {
+        val sm = ServerRef.server.listAllStubMappings().mappings.firstOrNull { it.id.equals(id) }
+            ?: return false
+        ServerRef.server.removeStubMapping(sm)
+        return true
+    }
+
 }
