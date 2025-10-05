@@ -9,6 +9,12 @@ import com.github.tomakehurst.wiremock.stubbing.ServeEvent
 import se.strawberry.admin.ServerRef
 import se.strawberry.common.Headers
 import se.strawberry.common.Paths
+import se.strawberry.common.Paths.ADMIN_PREFIX
+import se.strawberry.common.Paths.API_PREFIX
+import se.strawberry.common.Paths.UI_ASSETS_PREFIX
+import se.strawberry.common.Paths.UI_ROOT
+import se.strawberry.config.UiBlacklist.DEVTOOLS_WELL_KNOWN
+import se.strawberry.config.UiBlacklist.FAVICON
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
 
@@ -29,7 +35,7 @@ class RequestsHandler(
 
         val events = all.asSequence()
             .sortedByDescending { it.request.loggedDate }
-            .filter { ev -> showInternal || !isInternalRequestUrl(ev.request.url) }
+            .filter { ev -> showInternal || !shouldBeHiddenFromUI(ev.request.url) }
             .filter { method == null || it.request.method.value().equals(method, true) }
             .filter { pathSub == null || it.request.url.contains(pathSub, ignoreCase = true) }
             .filter { statusFilter == null || it.response.status == statusFilter }
@@ -45,7 +51,7 @@ class RequestsHandler(
         val ev = ServerRef.server.allServeEvents.find { it.id.toString() == id }
             ?: return json(404, """{"error":"not_found"}""")
 
-        if (isInternalRequestUrl(ev.request.url)) {
+        if (shouldBeHiddenFromUI(ev.request.url)) {
             return json(404, """{"error":"not_found"}""")
         }
 
@@ -143,8 +149,16 @@ class RequestsHandler(
     private fun requestHeaderValue(req: Request, name: String): String? =
         req.headers?.getHeader(name)?.takeIf { it.isPresent }?.firstValue()
 
-    private fun isInternalRequestUrl(url: String): Boolean =
-        url.startsWith(Paths.API_PREFIX) || url == Paths.UI_ROOT || url.startsWith("/__admin")
+    private fun shouldBeHiddenFromUI(url: String): Boolean {
+        if (url == FAVICON) return true
+        if (url == UI_ROOT) return true
+        if (url.startsWith(DEVTOOLS_WELL_KNOWN)) return true
+        if (url.startsWith(UI_ASSETS_PREFIX)) return true
+        if (url.startsWith(API_PREFIX)) return true
+        if (url.startsWith(ADMIN_PREFIX)) return true
+
+        return false
+    }
 
     private fun maskHeaders(h: Map<String, String?>): Map<String, String?> =
         h.mapValues { (k, v) ->

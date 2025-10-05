@@ -14,6 +14,7 @@ object TransformerNames {
 }
 
 object Paths {
+    const val ADMIN_PREFIX = "/__admin"
     const val UI_ROOT = "/_proxy-ui"
     const val UI_ASSETS_PREFIX = "/_proxy-ui/assets"
     const val API_PREFIX = "/_proxy-api"
@@ -36,7 +37,7 @@ object Headers {
 object Priorities {
     const val UI = 1
     const val DEFAULT_STUB = 2
-    const val PROXY_FALLBACK = 100
+    const val PROXY_FALLBACK = 1000
 }
 
 object MetadataKeys {
