@@ -1,20 +1,52 @@
 :root{
-  --bg:#0b0e14;
+  --bg: #0f1115;
+  --fg: #e6e9ef;
+  --fg-muted: #a2acba;
   --panel:#121826;
   --muted:#7a8699;
   --text:#e6edf3;
-  --accent:#6aa6ff;
+  --accent: #69a1ff;
   --accent-2:#1f6feb;
   --danger:#ff6b6b;
   --ok:#49d17d;
-  --border:#253045;
+  --border: #2a2f3a;
 }
 
 *{box-sizing:border-box}
 html,body{height:100%}
+
 body{
   margin:0; font:14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
   color:var(--text); background:linear-gradient(180deg,#0d1117 0%,#0a0f1a 100%);
+}
+
+body.dark {
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.wizard {
+  color: var(--fg);
+}
+.wizard .step-title { color: var(--fg); }
+.wizard .step-desc  { color: var(--fg-muted); }
+.wizard .panel {
+  background: #12151c;
+  border: 1px solid var(--border);
+}
+
+.menu, .sidebar {
+  background: #0b0e13;
+  color: var(--fg);
+}
+.menu a, .menu button {
+  color: var(--fg);
+}
+.menu a:hover, .menu button:hover {
+  background: rgba(255,255,255,.08);
+}
+.menu .section-title {
+  color: var(--fg-muted);
 }
 
 .container{max-width:1200px; margin:0 auto; padding:16px}
@@ -119,3 +151,8 @@ textarea.code{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monos
 .toast.show{ opacity:1 }
 
 .error{ color:#ffb3bf; background:#3b2230; border:1px solid #613242; padding:10px; border-radius:10px }
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}

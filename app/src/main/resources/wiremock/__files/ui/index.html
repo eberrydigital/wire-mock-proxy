@@ -5,8 +5,153 @@
     <title>WireMock Proxy — Requests</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link href="/_proxy-ui/assets/styles.css" rel="stylesheet" />
+
+    <!-- Dark theme overrides -->
+    <style>
+        :root {
+          --bg: #0f1115;
+          --bg-elev: #12151c;
+          --bg-elev-2: #0b0e13;
+          --fg: #e6e9ef;
+          --fg-muted: #a2acba;
+          --border: #2a2f3a;
+          --accent: #69a1ff;
+          --ok: #3fb950;
+          --warn: #f5a623;
+          --err: #ff6b6b;
+        }
+
+        body.dark {
+          background: var(--bg);
+          color: var(--fg);
+        }
+
+        /* Top bar / menu */
+        .topbar {
+          background: var(--bg-elev-2) !important;
+          border-bottom: 1px solid var(--border);
+          color: var(--fg);
+        }
+        .topbar h1 { color: var(--fg); }
+        .topbar .btn { color: var(--fg); border-color: var(--border); background: transparent; }
+        .topbar .btn:hover { background: rgba(255,255,255,.08); }
+        .topbar .btn.btn-secondary { color: var(--fg); background: #1a1f29; border-color: var(--border); }
+
+        /* Panels / tables */
+        .panel {
+          background: var(--bg-elev);
+          border: 1px solid var(--border);
+          color: var(--fg);
+        }
+        .panel-header h2 { color: var(--fg); }
+        .filters input,
+        .filters select {
+          background: #0c1017;
+          color: var(--fg);
+          border: 1px solid var(--border);
+        }
+        .table-wrap { background: transparent; }
+        table.table {
+          color: var(--fg);
+          border-color: var(--border);
+        }
+        .table th { color: var(--fg-muted); border-bottom: 1px solid var(--border); background: #0c1017; }
+        .table td { border-top: 1px solid var(--border); }
+        .table tr:hover { background: rgba(255,255,255,.04); }
+
+        /* Generic buttons */
+        .btn { color: var(--fg); border: 1px solid var(--border); background: #161a22; }
+        .btn:hover { background: rgba(255,255,255,.08); }
+        .btn-primary { background: var(--accent); border-color: var(--accent); color: #0a0c10; }
+        .btn-primary:hover { filter: brightness(1.05); }
+        .btn.btn-secondary { background: #1a1f29; color: var(--fg); }
+
+        /* Inputs / textarea / selects */
+        input[type="text"], input[type="number"], textarea, select {
+          background: #0c1017;
+          color: var(--fg);
+          border: 1px solid var(--border);
+        }
+        textarea.code {
+          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+          background: #0a0d13;
+        }
+        label { color: var(--fg); }
+        small.hint, .muted { color: var(--fg-muted); }
+
+        /* Modal (Wizard) */
+        .modal::backdrop { background: rgba(0,0,0,.6); }
+        .modal-card {
+          background: var(--bg-elev);
+          color: var(--fg);
+          border: 1px solid var(--border);
+        }
+        .modal-header {
+          background: var(--bg-elev-2);
+          border-bottom: 1px solid var(--border);
+          color: var(--fg);
+        }
+        .modal-body { color: var(--fg); }
+        .modal-footer {
+          background: var(--bg-elev-2);
+          border-top: 1px solid var(--border);
+        }
+        .icon-btn {
+          color: var(--fg);
+          background: transparent;
+          border: 1px solid transparent;
+        }
+        .icon-btn:hover { background: rgba(255,255,255,.08); border-color: var(--border); }
+
+        /* Wizard steps */
+        .steps .step { color: var(--fg-muted); }
+        .steps .step[aria-current="step"],
+        .steps .step.active { color: var(--fg); font-weight: 600; }
+        .step-pane h3 { color: var(--fg); }
+
+        /* Segmented control */
+        .segmented {
+          display: inline-flex;
+          background: #0c1017;
+          border: 1px solid var(--border);
+          border-radius: 8px;
+          overflow: hidden;
+        }
+        .segmented input { display:none; }
+        .segmented label {
+          padding: 6px 10px;
+          color: var(--fg-muted);
+          cursor: pointer;
+          user-select: none;
+        }
+        .segmented input:checked + label {
+          background: #1a1f29;
+          color: var(--fg);
+        }
+
+        /* Key-value editor block */
+        .kv-editor { background: #0b0f16; border: 1px solid var(--border); }
+
+        /* Status colors in table if вы их используете классами */
+        .status-2xx { color: var(--ok); }
+        .status-4xx, .status-5xx { color: var(--err); }
+
+        /* Focus visibility */
+        :focus-visible {
+          outline: 2px solid var(--accent);
+          outline-offset: 2px;
+        }
+
+        /* Toast */
+        .toast {
+          background: #0b0e13;
+          color: var(--fg);
+          border: 1px solid var(--border);
+          box-shadow: 0 10px 30px rgba(0,0,0,.4);
+        }
+    </style>
 </head>
-<body>
+<body class="dark">
 <header class="topbar">
     <div class="container">
         <h1>WireMock Proxy — Strawberry Web</h1>
@@ -56,7 +201,7 @@
     <form method="dialog" class="modal-card" id="wizardForm">
         <header class="modal-header">
             <div class="steps">
-                <span class="step" data-step="1">1. Match</span>
+                <span class="step" data-step="1" aria-current="step">1. Match</span>
                 <span class="step" data-step="2">2. Response</span>
                 <span class="step" data-step="3">3. Confirm</span>
             </div>
