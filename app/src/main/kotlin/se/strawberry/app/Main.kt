@@ -14,6 +14,7 @@ import se.strawberry.common.Paths.UI_ROOT
 import se.strawberry.common.Priorities.PROXY_FALLBACK
 import se.strawberry.common.Priorities.UI
 import se.strawberry.common.TransformerNames
+import se.strawberry.extensions.filters.DynamicRoutingGuard
 import se.strawberry.extensions.listeners.EphemeralServeEventListener
 import se.strawberry.extensions.matchers.TtlGuardMatcher
 import se.strawberry.extensions.transformers.UpstreamPatchTransformer
@@ -36,8 +37,7 @@ fun main(args: Array<String>) {
     val bindAddress = argMap["bind"] ?: EnvironmentConfig.bindAddress
     val adminBindAddress = argMap["adminBind"] ?: EnvironmentConfig.adminBindAddress
     val adminApiToken = argMap["adminToken"] ?: EnvironmentConfig.adminApiToken
-    val wireMockFiles = Paths.get("app/src/main/resources/wiremock")
-        .toAbsolutePath()
+    val wireMockFiles = Paths.get("app/src/main/resources/wiremock").toAbsolutePath()
     Files.createDirectories(wireMockFiles.resolve("mappings"))
     Files.createDirectories(wireMockFiles.resolve("__files"))
 
@@ -48,7 +48,7 @@ fun main(args: Array<String>) {
         .maxRequestJournalEntries(5000)
         .usingFilesUnderDirectory(wireMockFiles.toString())
         .extensions(UpstreamPatchTransformer(mapper), RequestsApiTransformer(), EphemeralServeEventListener(),
-            TtlGuardMatcher()
+            TtlGuardMatcher(), DynamicRoutingGuard()
         )
 
 
@@ -117,6 +117,16 @@ fun main(args: Array<String>) {
         any(urlMatching(".*")).atPriority(PROXY_FALLBACK)
             .willReturn(
                 aResponse().proxiedFrom(proxyTarget)
+            )
+    )
+
+    server.stubFor(
+        any(urlMatching(".*")).atPriority(PROXY_FALLBACK)
+            .willReturn(
+                aResponse()
+                    .proxiedFrom("{{#if request.headers.X-Forwarded-Host}}{{request.headers.X-Forwarded-Proto}}://{{request.headers.X-Forwarded-Host}}{{else}}{{parameters.fallbackProxyBaseUrl}}{{/if}}")
+                    .withTransformers("response-template")
+                    .withTransformerParameter("fallbackProxyBaseUrl", proxyTarget)
             )
     )
 

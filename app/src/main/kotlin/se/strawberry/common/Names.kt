@@ -32,6 +32,8 @@ object Headers {
     const val HTML_UTF8 = "text/html; charset=utf-8"
     const val CSS_UTF8 = "text/css; charset=utf-8"
     const val JS_UTF8 = "application/javascript; charset=utf-8"
+    const val X_FORWARDED_HOST = "X-Forwarded-Host"
+    const val X_FORWARDED_PROTO = "X-Forwarded-Proto"
 }
 
 object Priorities {
