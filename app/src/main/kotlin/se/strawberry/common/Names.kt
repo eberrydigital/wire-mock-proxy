@@ -8,6 +8,15 @@ object MatcherNames {
     const val TTL_GUARD = "ttl-guard"
 }
 
+object FilterNames {
+    const val DYNAMIC_ROUTING_GUARD = "dynamic-routing-guard"
+}
+
+object TemplateNames {
+    const val COMEUP_WITH_NAME = "service-origin"
+    const val SERVICE_TEMPLATE_HELPERS = "service-template-helpers"
+}
+
 object TransformerNames {
     const val REQUESTS_API = "requests-api"
     const val UPSTREAM_PATCH = "upstream-patch"
@@ -23,17 +32,8 @@ object Paths {
 
 object Headers {
     const val CONTENT_TYPE = "Content-Type"
-    const val CACHE_CONTROL = "Cache-Control"
-    const val AUTHORIZATION = "Authorization"
-    const val X_TEST_RUN_ID = "X-Test-Run-Id"
-
     const val JSON = "application/json"
-    const val JSON_UTF8 = "application/json; charset=utf-8"
-    const val HTML_UTF8 = "text/html; charset=utf-8"
-    const val CSS_UTF8 = "text/css; charset=utf-8"
-    const val JS_UTF8 = "application/javascript; charset=utf-8"
-    const val X_FORWARDED_HOST = "X-Forwarded-Host"
-    const val X_FORWARDED_PROTO = "X-Forwarded-Proto"
+    const val X_TARGET_SERVICE = "X-Target-Service"
 }
 
 object Priorities {

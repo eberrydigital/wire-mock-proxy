@@ -8,7 +8,6 @@ import com.github.tomakehurst.wiremock.http.Response
 import com.github.tomakehurst.wiremock.stubbing.ServeEvent
 import se.strawberry.admin.ServerRef
 import se.strawberry.common.Headers
-import se.strawberry.common.Paths
 import se.strawberry.common.Paths.ADMIN_PREFIX
 import se.strawberry.common.Paths.API_PREFIX
 import se.strawberry.common.Paths.UI_ASSETS_PREFIX

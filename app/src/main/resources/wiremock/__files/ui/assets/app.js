@@ -103,8 +103,6 @@ function normalizeRequestsPayload(data) {
 
 async function fetchRequests() {
   const url = new URL(API.list(), location.origin);
-
-  // (совместимость со старым UI) internal=1 включаем только если есть чекбокс с id=f-internal
   const internalCheckbox = document.getElementById("f-internal");
   if (internalCheckbox && internalCheckbox.checked) {
     url.searchParams.set("internal", "1");

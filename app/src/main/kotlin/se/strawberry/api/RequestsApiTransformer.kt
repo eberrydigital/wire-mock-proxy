@@ -26,17 +26,6 @@ class RequestsApiTransformer : ResponseTransformerV2 {
     override fun transform(response: Response, serveEvent: ServeEvent): Response {
         val req = serveEvent.request
 
-        EnvironmentConfig.adminApiToken?.let { token ->
-            val header = req.headers?.getHeader("Authorization")?.takeIf { it.isPresent }?.firstValue()
-            if (header == null || header != "Bearer $token") {
-                return Response.response()
-                    .status(401)
-                    .headers(jsonHeaders())
-                    .body("""{"error":"unauthorized"}""")
-                    .build()
-            }
-        }
-
         EphemeralCleaner.pruneNow()
 
         val url = req.url
@@ -71,6 +60,5 @@ class RequestsApiTransformer : ResponseTransformerV2 {
         }
     }
 
-    private fun jsonHeaders() =
-        HttpHeaders(HttpHeader.httpHeader(Headers.CONTENT_TYPE, Headers.JSON))
+    private fun jsonHeaders() = HttpHeaders(HttpHeader.httpHeader(Headers.CONTENT_TYPE, Headers.JSON))
 }
