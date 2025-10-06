@@ -390,7 +390,10 @@ function updateSummaryPreview() {
   qs("#sResp").textContent = `status=${status}, body=${isLikelyJson(contentType) ? "JSON" : "TEXT"} (${bodyLen} ch)`;
 
   const ttl = Number(qs("#wTtl").value);
-  qs("#sEph").textContent = `uses=1${(!Number.isNaN(ttl) && ttl>0) ? `, ttlMs=${ttl}` : ""}`;
+  const usesValRaw = Number(qs("#wUses").value);
+  const uses = Number.isFinite(usesValRaw) && usesValRaw > 0 ? Math.floor(usesValRaw) : 1;
+
+  qs("#sEph").textContent = `uses=${uses}${(!Number.isNaN(ttl) && ttl>0) ? `, ttlMs=${ttl}` : ""}`;
 
   qs("#previewJson").value = JSON.stringify(buildPayload(), null, 2);
 }
@@ -446,6 +449,11 @@ qs("#clearFiltersBtn").addEventListener("click", () => {
   qs("#filterPath").value = "";
   qs("#filterMethod").value = "";
   renderRequests();
+});
+
+["wUses", "wTtl", "wBody", "wContentType", "wStatus"].forEach((id) => {
+  const el = qs("#" + id);
+  if (el) el.addEventListener("input", updateSummaryPreview);
 });
 
 function scheduleRefresh() {
