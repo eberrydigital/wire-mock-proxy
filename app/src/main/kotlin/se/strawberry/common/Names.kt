@@ -13,7 +13,7 @@ object FilterNames {
 }
 
 object TemplateNames {
-    const val COMEUP_WITH_NAME = "service-origin"
+    const val SERVICE_ORIGIN = "service-origin"
     const val SERVICE_TEMPLATE_HELPERS = "service-template-helpers"
 }
 

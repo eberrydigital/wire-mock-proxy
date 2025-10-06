@@ -28,7 +28,7 @@ class ServiceTemplateHelpers(
                 ?.trim()
             resolved ?: ""
         }
-            return mapOf(TemplateNames.COMEUP_WITH_NAME to serviceOrigin)
+            return mapOf(TemplateNames.SERVICE_ORIGIN to serviceOrigin)
     }
 
     override fun getName(): String = TemplateNames.SERVICE_TEMPLATE_HELPERS
