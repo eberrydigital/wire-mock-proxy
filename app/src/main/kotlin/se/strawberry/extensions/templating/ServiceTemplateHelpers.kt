@@ -11,7 +11,7 @@ import se.strawberry.config.ServiceRegistry
  *
  * Usage in stub:
  *   {{service-origin name=request.headers.X-Target-Service base=parameters.fallbackProxyBaseUrl}}
- * -> returns registry[name] if present, otherwise base.
+ * -> returns registry name if present, otherwise empty string.
  */
 
 class ServiceTemplateHelpers(

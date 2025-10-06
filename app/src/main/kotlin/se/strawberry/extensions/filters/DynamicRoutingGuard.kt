@@ -65,10 +65,4 @@ class DynamicRoutingGuard(
             .build()
         return RequestFilterAction.stopWith(rd)
     }
-
-    private fun envBool(name: String, default: Boolean): Boolean {
-        val v = System.getenv(name)?.trim()?.lowercase() ?: return default
-        return v == "1" || v == "true" || v == "yes" || v == "on"
-    }
-    private fun envCsv(name: String) = System.getenv(name)?.split(',')?.map { it.trim() }?.filter { it.isNotEmpty() } ?: emptyList()
 }

@@ -11,7 +11,6 @@ import se.strawberry.common.Headers
 import se.strawberry.common.Json
 import se.strawberry.common.Paths
 import se.strawberry.common.TransformerNames
-import se.strawberry.config.EnvironmentConfig
 import se.strawberry.maintenance.EphemeralCleaner
 
 class RequestsApiTransformer : ResponseTransformerV2 {
