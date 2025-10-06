@@ -57,7 +57,7 @@ fun main(args: Array<String>) {
     server.start()
 
     log.info(
-        "WireMock started  target={}  port={}  adminPort={}  bind={}  adminBind={}  requireTestKey={}  tokenEnabled={}",
+        "WireMock started  target={}  port={}  adminPort={}  bind={}  adminBind={} tokenEnabled={}",
         proxyTarget,
         port,
         adminPort,
