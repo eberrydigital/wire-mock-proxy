@@ -22,6 +22,40 @@ import se.strawberry.extensions.templating.ServiceTemplateHelpers
 import se.strawberry.extensions.transformers.UpstreamPatchTransformer
 import java.nio.file.Files
 import java.nio.file.Paths
+import java.nio.file.Path
+
+
+private fun resolveWireMockFilesDir(): Path {
+    val override = System.getProperty("WIREMOCK_FILES") ?: System.getenv("WIREMOCK_FILES")
+    if (!override.isNullOrBlank()) {
+        val p = Paths.get(override).toAbsolutePath().normalize()
+        Files.createDirectories(p.resolve("mappings"))
+        Files.createDirectories(p.resolve("__files"))
+        log.info("WireMock files dir (override): {}", p)
+        return p
+    }
+
+    val candidates = listOf(
+        Paths.get("app/src/main/resources/wiremock"),
+        Paths.get("src/main/resources/wiremock"),
+        Paths.get("resources/wiremock")
+    )
+
+    for (cand in candidates) {
+        val p = cand.toAbsolutePath().normalize()
+        if (Files.isDirectory(p)) {
+            log.info("WireMock files dir (detected): {}", p)
+            return p
+        }
+    }
+
+    val fallback = Paths.get("build/wiremock").toAbsolutePath().normalize()
+    Files.createDirectories(fallback.resolve("mappings"))
+    Files.createDirectories(fallback.resolve("__files"))
+    log.warn("WireMock files dir (fallback): {}", fallback)
+    return fallback
+}
+
 
 private val log = LoggerFactory.getLogger("Main")
 
@@ -29,7 +63,7 @@ fun main(){
     val proxyTarget = EnvironmentConfig.proxyTarget
     val port = EnvironmentConfig.port
     val bindAddress = EnvironmentConfig.bindAddress
-    val wireMockFiles = Paths.get("app/src/main/resources/wiremock").toAbsolutePath() //:TODO solve before distributing
+    val wireMockFiles = resolveWireMockFilesDir()
     Files.createDirectories(wireMockFiles.resolve("mappings"))
     Files.createDirectories(wireMockFiles.resolve("__files"))
 
