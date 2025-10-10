@@ -48,7 +48,8 @@ java {
     }
 }
 
-application { mainClass.set("se.strawberry.MainKt") }
+application { mainClass.set("se.strawberry.app.MainKt") }
+
 
 kotlin {
     jvmToolchain {

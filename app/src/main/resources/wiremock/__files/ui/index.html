@@ -154,7 +154,7 @@
 <body class="dark">
 <header class="topbar">
     <div class="container">
-        <h1>WireMock Proxy — Strawberry Web</h1>
+        <h1>WireMock Proxy — Strawberry</h1>
         <div class="topbar-actions">
             <button id="refreshBtn" class="btn">Refresh</button>
             <button id="autoToggleBtn" class="btn btn-secondary" aria-pressed="true">Auto: On</button>
@@ -263,8 +263,8 @@
                 <div class="grid-2">
                     <div class="field">
                         <label>Uses</label>
-                        <input type="number" id="wUses" value="1" min="1" readonly />
-                        <small class="hint">v0.1 is one-shot.</small>
+                        <input type="number" id="wUses" value="1" min="1" step="1" />
+                        <small class="hint">How many times stub will be used.</small>
                     </div>
                     <div class="field">
                         <label>TTL (ms) <span class="muted">(optional)</span></label>

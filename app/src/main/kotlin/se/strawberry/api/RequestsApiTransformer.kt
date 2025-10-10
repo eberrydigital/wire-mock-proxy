@@ -11,7 +11,6 @@ import se.strawberry.common.Headers
 import se.strawberry.common.Json
 import se.strawberry.common.Paths
 import se.strawberry.common.TransformerNames
-import se.strawberry.config.EnvironmentConfig
 import se.strawberry.maintenance.EphemeralCleaner
 
 class RequestsApiTransformer : ResponseTransformerV2 {
@@ -25,17 +24,6 @@ class RequestsApiTransformer : ResponseTransformerV2 {
 
     override fun transform(response: Response, serveEvent: ServeEvent): Response {
         val req = serveEvent.request
-
-        EnvironmentConfig.adminApiToken?.let { token ->
-            val header = req.headers?.getHeader("Authorization")?.takeIf { it.isPresent }?.firstValue()
-            if (header == null || header != "Bearer $token") {
-                return Response.response()
-                    .status(401)
-                    .headers(jsonHeaders())
-                    .body("""{"error":"unauthorized"}""")
-                    .build()
-            }
-        }
 
         EphemeralCleaner.pruneNow()
 
@@ -71,6 +59,5 @@ class RequestsApiTransformer : ResponseTransformerV2 {
         }
     }
 
-    private fun jsonHeaders() =
-        HttpHeaders(HttpHeader.httpHeader(Headers.CONTENT_TYPE, Headers.JSON))
+    private fun jsonHeaders() = HttpHeaders(HttpHeader.httpHeader(Headers.CONTENT_TYPE, Headers.JSON))
 }
