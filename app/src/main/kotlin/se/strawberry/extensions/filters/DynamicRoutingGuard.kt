@@ -33,7 +33,7 @@ class DynamicRoutingGuard(
         val url = request.url
         if (isInternalPath(url)) return RequestFilterAction.continueWith(request)
 
-        val svcHeader = request.header(Headers.X_TARGET_SERVICE)
+        val svcHeader = request.header(Headers.X_MOCK_TARGET_SERVICE)
         val svc = if (svcHeader.isPresent) svcHeader.values()[0] else null
 
         if (svc.isNullOrBlank()) return stop(400, "missing-service")

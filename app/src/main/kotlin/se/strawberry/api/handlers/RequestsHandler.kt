@@ -29,6 +29,7 @@ class RequestsHandler(
             "1", "true", "yes", "y" -> true
             else -> false
         }
+        val sessionId = query["sessionId"]?.trim()?.takeIf { it.isNotEmpty() }
 
         val all = ServerRef.server.allServeEvents
 
@@ -38,6 +39,7 @@ class RequestsHandler(
             .filter { method == null || it.request.method.value().equals(method, true) }
             .filter { pathSub == null || it.request.url.contains(pathSub, ignoreCase = true) }
             .filter { statusFilter == null || it.response.status == statusFilter }
+            .filter { sessionId == null || it.request.getHeader(Headers.X_MOCK_SESSION_ID) == sessionId }
             .take(limit)
             .map { toDto(it) }
             .toList()

@@ -6,6 +6,7 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import org.slf4j.LoggerFactory
 import se.strawberry.admin.ServerRef
 import se.strawberry.api.RequestsApiTransformer
+import se.strawberry.common.Headers.X_MOCK_TARGET_SERVICE
 import se.strawberry.common.Json
 import se.strawberry.common.Paths.API_PREFIX
 import se.strawberry.common.Paths.UI_ASSETS_PREFIX
@@ -147,7 +148,7 @@ fun main(){
         any(urlMatching(".*")).atPriority(PROXY_FALLBACK)
             .willReturn(
                 aResponse()
-                    .proxiedFrom("{{service-origin name=request.headers.[X-Target-Service]}}")
+                    .proxiedFrom("{{service-origin name=request.headers.[$X_MOCK_TARGET_SERVICE]}}")
                     .withTransformers("response-template")
             )
     )
