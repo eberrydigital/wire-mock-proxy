@@ -1,4 +1,4 @@
-package se.strawberry.extensions.filters
+package se.strawberry.wiremock.filters
 
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder
 import com.github.tomakehurst.wiremock.http.Request

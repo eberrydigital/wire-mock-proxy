@@ -1,4 +1,4 @@
-package se.strawberry.extensions.transformers
+package se.strawberry.wiremock.transformers
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper

@@ -1,4 +1,4 @@
-package se.strawberry.extensions.templating
+package se.strawberry.wiremock.templating
 
 import com.github.jknack.handlebars.Helper
 import com.github.jknack.handlebars.Options

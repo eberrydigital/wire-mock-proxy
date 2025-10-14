@@ -17,11 +17,11 @@ import se.strawberry.common.Priorities.UI
 import se.strawberry.common.TransformerNames
 import se.strawberry.config.EnvironmentConfig
 import se.strawberry.config.ServiceRegistry
-import se.strawberry.extensions.filters.DynamicRoutingGuard
-import se.strawberry.extensions.listeners.EphemeralServeEventListener
-import se.strawberry.extensions.matchers.TtlGuardMatcher
-import se.strawberry.extensions.templating.ServiceTemplateHelpers
-import se.strawberry.extensions.transformers.UpstreamPatchTransformer
+import se.strawberry.wiremock.filters.DynamicRoutingGuard
+import se.strawberry.wiremock.listeners.EphemeralServeEventListener
+import se.strawberry.wiremock.matchers.TtlGuardMatcher
+import se.strawberry.wiremock.templating.ServiceTemplateHelpers
+import se.strawberry.wiremock.transformers.UpstreamPatchTransformer
 
 
 object ServerBootstrap {
