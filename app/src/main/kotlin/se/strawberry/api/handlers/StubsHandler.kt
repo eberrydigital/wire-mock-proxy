@@ -9,7 +9,6 @@ import com.github.tomakehurst.wiremock.http.Response
 import se.strawberry.admin.ServerRef
 import se.strawberry.common.Headers
 import se.strawberry.common.MetadataKeys
-import se.strawberry.config.EnvironmentConfig
 import se.strawberry.stubs.dto.CreateStubRequest
 import se.strawberry.stubs.dto.StubBuilder
 
@@ -20,8 +19,7 @@ class StubsHandler(
         val dtoOriginal = mapper.readValue<CreateStubRequest>(request.bodyAsString)
         val sessionId = SessionScope.extractSessionId(request)
         val patchedDto = SessionScope.withSessionMatch(dtoOriginal, sessionId)
-        val proxyTarget = EnvironmentConfig.proxyTarget
-        val stub = StubBuilder.buildStubMapping(patchedDto, proxyTarget)
+        val stub = StubBuilder.buildStubMapping(patchedDto)
         ServerRef.server.addStubMapping(stub)
 
         val md = stub.metadata

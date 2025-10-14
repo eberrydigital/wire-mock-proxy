@@ -4,7 +4,7 @@ import com.github.jknack.handlebars.Helper
 import com.github.jknack.handlebars.Options
 import com.github.tomakehurst.wiremock.extension.TemplateHelperProviderExtension
 import se.strawberry.common.TemplateNames
-import se.strawberry.config.ServiceRegistry
+import java.net.URI
 
 /**
  * Registers custom Handlebars helpers for response templating.
@@ -15,20 +15,21 @@ import se.strawberry.config.ServiceRegistry
  */
 
 class ServiceTemplateHelpers(
-    private val registry: ServiceRegistry
+    private val services: Map<String, URI>
 ) : TemplateHelperProviderExtension {
 
     override fun provideTemplateHelpers(): Map<String, Helper<*>> {
         val serviceOrigin = Helper<Any?> { _, options: Options ->
-            val name = options.hash?.get("name")
+            val name = options.hash["name"]
                 ?.toString()
                 ?.trim()
                 .orEmpty()
-            val resolved = registry.resolve(name)
-                ?.trim()
-            resolved ?: ""
+
+            val uri = services[name]
+            (uri?.toString()) ?: ""
         }
-            return mapOf(TemplateNames.SERVICE_ORIGIN to serviceOrigin)
+
+        return mapOf(TemplateNames.SERVICE_ORIGIN to serviceOrigin)
     }
 
     override fun getName(): String = TemplateNames.SERVICE_TEMPLATE_HELPERS

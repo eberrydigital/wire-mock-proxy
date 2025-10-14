@@ -15,8 +15,8 @@ import se.strawberry.common.Paths.UI_ROOT
 import se.strawberry.common.Priorities.PROXY_FALLBACK
 import se.strawberry.common.Priorities.UI
 import se.strawberry.common.TransformerNames
-import se.strawberry.config.EnvironmentConfig
-import se.strawberry.config.ServiceRegistry
+import se.strawberry.config.AppConfig
+import se.strawberry.config.AppConfigLoader
 import se.strawberry.wiremock.filters.DynamicRoutingGuard
 import se.strawberry.wiremock.listeners.EphemeralServeEventListener
 import se.strawberry.wiremock.matchers.TtlGuardMatcher
@@ -29,15 +29,18 @@ object ServerBootstrap {
     val mapper = Json.mapper
 
     fun start(): WireMockServer {
-
-        val cfg = EnvironmentConfig
-        val services = ServiceRegistry.fromEnv()
-
+        val cfg: AppConfig = AppConfigLoader.load()
         val server = WireMockServer(
             options()
                 .port(cfg.port)
                 .bindAddress(cfg.bindAddress)
-                .usingFilesUnderClasspath("wiremock") // Ui Files reside there
+                .templatingEnabled(true)
+                .apply {
+                    when (val fs = cfg.filesSource) {
+                        is AppConfig.FilesSource.Classpath -> usingFilesUnderClasspath(fs.root)
+                        is AppConfig.FilesSource.Directory -> usingFilesUnderDirectory(fs.path)
+                    }
+                }
                 // High level order of processing:
                 // 1) DynamicRoutingGuard — let through only correct external requests (headers, service names, ports).
                 // 2) TtlGuardMatcher — TTL (time to live) stub logic.
@@ -46,19 +49,19 @@ object ServerBootstrap {
                 // 5) EphemeralServeEventListener — decrement uses/TTL, remove stubs if needed.
                 // 6) ServiceTemplateHelpers — helper functions for response templating.
                 .extensions(
-                    DynamicRoutingGuard(services),
+                    DynamicRoutingGuard(cfg.services, cfg.allowedPorts),
                     TtlGuardMatcher(),
                     UpstreamPatchTransformer(mapper),
                     RequestsApiTransformer(),
                     EphemeralServeEventListener(),
-                    ServiceTemplateHelpers(services)
+                    ServiceTemplateHelpers(cfg.services)
                 )
                 .templatingEnabled(true)
         )
 
         server.start()
         ServerRef.server = server
-        log.info("WireMock proxy started on {}:{}; services: {}", cfg.bindAddress, cfg.port, services)
+        log.info("WireMock proxy started on {}:{}; services: {}", cfg.bindAddress, cfg.port, cfg.services.keys)
 
         // Ui Files
         registerRulesForFrontendRequests(server)

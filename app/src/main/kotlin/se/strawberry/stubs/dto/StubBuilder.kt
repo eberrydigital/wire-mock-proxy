@@ -22,15 +22,17 @@ import com.github.tomakehurst.wiremock.common.Metadata
 import com.github.tomakehurst.wiremock.extension.Parameters
 import com.github.tomakehurst.wiremock.matching.UrlPattern
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
+import se.strawberry.common.Headers.X_MOCK_TARGET_SERVICE
 import se.strawberry.common.ListenerNames
 import se.strawberry.common.MatcherNames
 import se.strawberry.common.MetadataKeys
+import se.strawberry.common.TemplateNames
 import se.strawberry.common.TransformerNames
 
 object StubBuilder {
     private val mapper = jacksonObjectMapper()
 
-    fun buildStubMapping(dto: CreateStubRequest, proxiedTarget: String?): StubMapping {
+    fun buildStubMapping(dto: CreateStubRequest): StubMapping {
         val mappingBuilder = when (dto.request.url.type) {
             UrlMatchType.EXACT -> requestMatching(method = dto.request.method, url = urlEqualTo(dto.request.url.value))
             UrlMatchType.LOOSENED -> requestMatching(method = dto.request.method,
@@ -102,7 +104,7 @@ object StubBuilder {
             }
 
             RespMode.PATCH_UPSTREAM -> {
-                rb.proxiedFrom(requireNotNull(proxiedTarget) { "proxyTarget is required for patchUpstream" })
+                rb.proxiedFrom("{{${TemplateNames.SERVICE_ORIGIN} name=request.headers.[$X_MOCK_TARGET_SERVICE]}}")
                 rb.withTransformers(TransformerNames.UPSTREAM_PATCH)
                 rb.withTransformerParameter("patch", mapper.valueToTree(dto.response.patch))
             }
