@@ -11,7 +11,7 @@ object AppConfigLoader {
         val port = Env.int("PORT", 8080)!!
         require(port in 1..65535) { "PORT must be in 1..65535" }
 
-        val bind = Env.str("BIND_ADDRESS", "0.0.0.0")!!
+        val bindAddress = Env.str("BIND_ADDRESS", "0.0.0.0")!!
 
         val filesSource = Env.str("WIREMOCK_FILES_DIR")?.let {
             AppConfig.FilesSource.Directory(it)
@@ -29,14 +29,13 @@ object AppConfigLoader {
 
         val cfg = AppConfig(
             port = port,
-            bindAddress = bind,
+            bindAddress = bindAddress,
             filesSource = filesSource,
             allowedPorts = allowedPorts,
             services = services,
             uiEnabled = uiEnabled
         )
 
-        // Чёткий стартовый лог (без секретов)
         val filesSrcLog = when (filesSource) {
             is AppConfig.FilesSource.Classpath -> "classpath:${filesSource.root}"
             is AppConfig.FilesSource.Directory -> "dir:${filesSource.path}"
