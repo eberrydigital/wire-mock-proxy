@@ -37,7 +37,14 @@ object ServerBootstrap {
             options()
                 .port(cfg.port)
                 .bindAddress(cfg.bindAddress)
-                .usingFilesUnderDirectory("__files")  // Ui Files reside there
+                .usingFilesUnderClasspath("wiremock") // Ui Files reside there
+                // High level order of processing:
+                // 1) DynamicRoutingGuard — let through only correct external requests (headers, service names, ports).
+                // 2) TtlGuardMatcher — TTL (time to live) stub logic.
+                // 3) RequestsApiTransformer — API that our frontend communicates with, starts with /_proxy-api.
+                // 4) UpstreamPatchTransformer — patch responses from upstream services if needed.
+                // 5) EphemeralServeEventListener — decrement uses/TTL, remove stubs if needed.
+                // 6) ServiceTemplateHelpers — helper functions for response templating.
                 .extensions(
                     DynamicRoutingGuard(services),
                     TtlGuardMatcher(),
