@@ -1,4 +1,4 @@
-package se.strawberry.extensions.transformers
+package se.strawberry.wiremock.transformers
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -105,11 +105,10 @@ class UpstreamPatchTransformer(
     }
 
     private fun isJsonContentType(ct: String?): Boolean =
-        ct != null && ("json" in ct) // covers application/json, application/problem+json, etc.
+        ct != null && ("json" in ct)
 
     private fun looksLikeJson(bytes: ByteArray?): Boolean {
         if (bytes == null || bytes.isEmpty()) return false
-        // quick heuristic: ignore leading whitespace, then check first char
         var i = 0
         while (i < bytes.size && bytes[i].toInt().toChar().isWhitespace()) i++
         if (i >= bytes.size) return false

@@ -1,4 +1,4 @@
-package se.strawberry.extensions.listeners
+package se.strawberry.wiremock.listeners
 
 import com.github.tomakehurst.wiremock.extension.Parameters
 import com.github.tomakehurst.wiremock.extension.ServeEventListener

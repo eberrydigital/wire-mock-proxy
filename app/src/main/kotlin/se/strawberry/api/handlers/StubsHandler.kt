@@ -9,30 +9,17 @@ import com.github.tomakehurst.wiremock.http.Response
 import se.strawberry.admin.ServerRef
 import se.strawberry.common.Headers
 import se.strawberry.common.MetadataKeys
-import se.strawberry.config.EnvironmentConfig
 import se.strawberry.stubs.dto.CreateStubRequest
-import se.strawberry.stubs.dto.HeaderMatch
-import se.strawberry.stubs.dto.HeaderMatchType
 import se.strawberry.stubs.dto.StubBuilder
 
 class StubsHandler(
     private val mapper: ObjectMapper,
 ) {
     fun create(request: Request): Response {
-        val dtoOriginal: CreateStubRequest = mapper.readValue(request.bodyAsString)
-        val sessionId = request.getHeader(Headers.X_MOCK_SESSION_ID)?.trim()?.takeIf { it.isNotEmpty() }
-        val patchedDto: CreateStubRequest = if (sessionId != null) {
-            val existing = dtoOriginal.request.headers
-            val patchedHeaders = existing + (Headers.X_MOCK_SESSION_ID to HeaderMatch(
-                type = HeaderMatchType.EQUAL_TO,
-                value = sessionId
-            ))
-            dtoOriginal.copy(
-                request = dtoOriginal.request.copy(headers = patchedHeaders)
-            )
-        } else dtoOriginal
-        val proxyTarget = EnvironmentConfig.proxyTarget
-        val stub = StubBuilder.buildStubMapping(patchedDto, proxyTarget)
+        val dtoOriginal = mapper.readValue<CreateStubRequest>(request.bodyAsString)
+        val sessionId = SessionScope.extractSessionId(request)
+        val patchedDto = SessionScope.withSessionMatch(dtoOriginal, sessionId)
+        val stub = StubBuilder.buildStubMapping(patchedDto)
         ServerRef.server.addStubMapping(stub)
 
         val md = stub.metadata

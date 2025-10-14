@@ -1,4 +1,4 @@
-package se.strawberry.extensions.matchers
+package se.strawberry.wiremock.matchers
 
 import com.github.tomakehurst.wiremock.extension.Parameters
 import com.github.tomakehurst.wiremock.http.Request
