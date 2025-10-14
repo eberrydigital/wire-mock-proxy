@@ -34,9 +34,10 @@ Upstream Service --> [Instead of actual response WM sends stub if there's a matc
 
 ```
 1. Server is started with the map of services that it can do mapping to for example: SERVICE_MAP=omni=https://api.test.eberry.digital
-2. Client sends request with the header X-Mock-Target-Service: serviceName
+2. Client sends request with the header X-Mock-Target-Service: serviceName. Service names are somethign client and service should agree on.
 3. If serviceName matches one of the keys in SERVICE_MAP, the request is proxied to the corresponding URL. Otherwise we send back 400.
 4. Client also sends the header X-Mock-Session-Id. This is optional (:TODO make it mandatory) and is used to scope stubs to a session.
+5. Currently client doesn't know session id, so we should manually go to ui host:port/_proxy-ui and copy sessionId. Then modify headers via for example simple-modify-headers chrome extension with the value of sessionId.
 ```
 ### Start
 
