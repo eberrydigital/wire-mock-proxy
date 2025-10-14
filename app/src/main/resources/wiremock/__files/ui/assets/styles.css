@@ -49,6 +49,9 @@ body.dark {
   color: var(--fg-muted);
 }
 
+.topbar .session { display:flex; gap:.5rem; align-items:center; margin-left:auto; }
+.topbar .session code { padding:.2rem .4rem; border:1px dashed var(--border); border-radius:.4rem; }
+
 .container{max-width:1200px; margin:0 auto; padding:16px}
 
 .topbar{

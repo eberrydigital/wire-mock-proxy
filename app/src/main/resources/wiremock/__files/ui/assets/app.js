@@ -14,14 +14,147 @@ async function apiFetch(input, init = {}) {
   return res;
 }
 
+const qs = (sel, root = document) => root.querySelector(sel);
+const qsa = (sel, root = document) => [...root.querySelectorAll(sel)];
+
+// ===== Session handling (single key 'mock_session_id' + migrate from legacy) =====
+const LS_KEY_NEW = "mock_session_id";
+const LEGACY_KEYS = ["wm_session", "mockSessionId"];
+let __SESSION_MEM = null;
+
+function safeUuidV4() {
+  try {
+    if (window.crypto?.getRandomValues) {
+      const rnd = crypto.getRandomValues(new Uint8Array(16));
+      rnd[6] = (rnd[6] & 0x0f) | 0x40; // v4
+      rnd[8] = (rnd[8] & 0x3f) | 0x80; // variant
+      const b2h = (b) => b.toString(16).padStart(2, "0");
+      const s = [...rnd].map(b2h).join("");
+      return `${s.slice(0,8)}-${s.slice(8,12)}-${s.slice(12,16)}-${s.slice(16,20)}-${s.slice(20)}`;
+    }
+  } catch {}
+  return `m_${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`;
+}
+
+function readKey(key) {
+  try {
+    const v = localStorage.getItem(key);
+    if (typeof v === "string" && v.trim()) return v.trim();
+  } catch {}
+  return null;
+}
+
+function writeNewKey(value) {
+  try { localStorage.setItem(LS_KEY_NEW, value); } catch {}
+}
+
+function removeLegacyKeys() {
+  for (const k of LEGACY_KEYS) {
+    try { localStorage.removeItem(k); } catch {}
+  }
+}
+
+function getSessionId() {
+  if (__SESSION_MEM) return __SESSION_MEM;
+
+  const current = readKey(LS_KEY_NEW);
+  if (current) {
+    __SESSION_MEM = current;
+    removeLegacyKeys();
+    return current;
+  }
+
+  for (const k of LEGACY_KEYS) {
+    const legacy = readKey(k);
+    if (legacy) {
+      __SESSION_MEM = legacy;
+      writeNewKey(legacy);
+      removeLegacyKeys();
+      return legacy;
+    }
+  }
+
+  const fresh = safeUuidV4();
+  __SESSION_MEM = fresh;
+  writeNewKey(fresh);
+  removeLegacyKeys();
+  return fresh;
+}
+
+function setSessionId(id) {
+  __SESSION_MEM = id;
+  writeNewKey(id);
+  removeLegacyKeys();
+}
+
+function renderSessionUI() {
+  const id = getSessionId();
+  const inp = document.getElementById("sessionHeaderLine");
+  if (inp) inp.value = id;
+
+  const el = document.getElementById("sessionIdText");
+  if (el) el.textContent = id;
+}
+
+document.getElementById("regenSessionBtn")?.addEventListener("click", (e) => {
+  e.preventDefault();
+  setSessionId(safeUuidV4());
+  renderSessionUI();
+  fetchRequests();
+  toast("Session regenerated");
+});
+
+document.getElementById("copySessionBtn")?.addEventListener("click", async (e) => {
+  e.preventDefault();
+  const id = getSessionId();
+
+  try {
+    await navigator.clipboard.writeText(id);
+    toast("Copied: " + id);
+    return;
+  } catch {}
+
+  const inp = document.getElementById("sessionHeaderLine");
+  if (inp) {
+    const prev = inp.value;
+    inp.value = id;
+    inp.focus();
+    inp.select();
+    try {
+      const ok = document.execCommand("copy");
+      toast(ok ? "Copied: " + id : "Copy failed");
+    } catch {
+      toast("Copy failed");
+    } finally {
+      inp.value = prev;
+      inp.setSelectionRange(prev.length, prev.length);
+      inp.blur();
+    }
+  } else {
+    toast("Copy failed");
+  }
+});
+
+// ===== API endpoints (session-aware) =====
 const API = {
-  list: () => "/_proxy-api/requests",
+  list: () => `/_proxy-api/requests?sessionId=${encodeURIComponent(getSessionId())}`,
   details: (id) => `/_proxy-api/requests/${encodeURIComponent(id)}`,
   createStub: () => "/_proxy-api/stubs",
 };
 
-const qs = (sel, root = document) => root.querySelector(sel);
-const qsa = (sel, root = document) => [...root.querySelectorAll(sel)];
+// ===== Stub creation (adds X-Mock-Session-Id) =====
+async function createStub(payload) {
+  const res = await apiFetch(API.createStub(), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Mock-Session-Id": getSessionId(),
+    },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error("Stub create failed");
+  return res.json().catch(() => ({}));
+}
 
 // ===== Utilities =====
 const fmtTime = (isoOrMs) => {
@@ -93,16 +226,16 @@ function normalizeRequestsPayload(data) {
   if (Array.isArray(data.entries)) return data.entries;
   if (Array.isArray(data.events)) return data.events;
   if (Array.isArray(data.logs)) return data.logs;
-  if (data._embedded) {
+  if (data?._embedded) {
     for (const v of Object.values(data._embedded)) if (Array.isArray(v)) return v;
   }
-  if (data.id && (data.method || data.request?.method)) return [data];
-  for (const v of Object.values(data)) if (Array.isArray(v) && v.length && typeof v[0] === "object") return v;
+  if (data?.id && (data.method || data.request?.method)) return [data];
+  for (const v of Object.values(data || {})) if (Array.isArray(v) && v.length && typeof v[0] === "object") return v;
   return [];
 }
 
 async function fetchRequests() {
-  const url = new URL(API.list(), location.origin);
+  const url = new URL(API.list(), location.origin); // already has sessionId
   const internalCheckbox = document.getElementById("f-internal");
   if (internalCheckbox && internalCheckbox.checked) {
     url.searchParams.set("internal", "1");
@@ -149,7 +282,7 @@ function renderRequests() {
 
   const rows = state.requests.filter((it) => {
     const url = it.path || it.url || it.request?.url || "";
-    const m = (it.method || it.request?.method || "").toUpperCase();
+    const m = (it.request?.method || it.method || "").toUpperCase();
     const okPath = path ? url.toLowerCase().includes(path.toLowerCase()) : true;
     const okMethod = method ? m === method : true;
     return okPath && okMethod;
@@ -404,15 +537,7 @@ async function onCreateStub() {
   qs("#createBtn").disabled = true;
 
   try {
-    const res = await apiFetch(API.createStub(), {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error(`${res.status} ${res.statusText}: ${text}`);
-    }
+    await createStub(payload); // session-aware POST
     toast("Stub created");
     qs("#createBtn").hidden = true;
     qs("#closeAfterCreateBtn").hidden = false;
@@ -462,4 +587,6 @@ function scheduleRefresh() {
 }
 
 // ===== Init =====
+renderSessionUI();
 fetchRequests().then(() => scheduleRefresh());
+document.addEventListener("DOMContentLoaded", renderSessionUI);

@@ -21,40 +21,50 @@
           --err: #ff6b6b;
         }
 
-        body.dark {
-          background: var(--bg);
-          color: var(--fg);
-        }
+        body.dark { background: var(--bg); color: var(--fg); }
 
         /* Top bar / menu */
-        .topbar {
-          background: var(--bg-elev-2) !important;
-          border-bottom: 1px solid var(--border);
-          color: var(--fg);
-        }
-        .topbar h1 { color: var(--fg); }
+        .topbar { background: var(--bg-elev-2) !important; border-bottom: 1px solid var(--border); color: var(--fg); }
+        .topbar h1 { color: var(--fg); margin: 0; font-size: 18px; }
         .topbar .btn { color: var(--fg); border-color: var(--border); background: transparent; }
         .topbar .btn:hover { background: rgba(255,255,255,.08); }
         .topbar .btn.btn-secondary { color: var(--fg); background: #1a1f29; border-color: var(--border); }
 
-        /* Panels / tables */
-        .panel {
-          background: var(--bg-elev);
-          border: 1px solid var(--border);
-          color: var(--fg);
+        /* Make header a flexible row (title | session | actions) */
+        .topbar .container {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          padding: 10px 16px;
+          flex-wrap: wrap;
         }
-        .panel-header h2 { color: var(--fg); }
-        .filters input,
-        .filters select {
+        .topbar .spacer { flex: 1 1 auto; }
+
+        /* Session block */
+        .session {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          max-width: 100%;
+        }
+        .session .label { opacity: .85; }
+        .session .mono {
+          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
           background: #0c1017;
           color: var(--fg);
-          border: 1px solid var(--border);
+          border: 1px dashed var(--border);
+          border-radius: 6px;
+          padding: 6px 8px;
+          width: 360px;
+          max-width: 60vw;
         }
+
+        /* Panels / tables */
+        .panel { background: var(--bg-elev); border: 1px solid var(--border); color: var(--fg); }
+        .panel-header h2 { color: var(--fg); }
+        .filters input, .filters select { background: #0c1017; color: var(--fg); border: 1px solid var(--border); }
         .table-wrap { background: transparent; }
-        table.table {
-          color: var(--fg);
-          border-color: var(--border);
-        }
+        table.table { color: var(--fg); border-color: var(--border); width: 100%; }
         .table th { color: var(--fg-muted); border-bottom: 1px solid var(--border); background: #0c1017; }
         .table td { border-top: 1px solid var(--border); }
         .table tr:hover { background: rgba(255,255,255,.04); }
@@ -67,94 +77,57 @@
         .btn.btn-secondary { background: #1a1f29; color: var(--fg); }
 
         /* Inputs / textarea / selects */
-        input[type="text"], input[type="number"], textarea, select {
-          background: #0c1017;
-          color: var(--fg);
-          border: 1px solid var(--border);
-        }
-        textarea.code {
-          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-          background: #0a0d13;
-        }
+        input[type="text"], input[type="number"], textarea, select { background: #0c1017; color: var(--fg); border: 1px solid var(--border); }
+        textarea.code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; background: #0a0d13; }
         label { color: var(--fg); }
         small.hint, .muted { color: var(--fg-muted); }
 
         /* Modal (Wizard) */
         .modal::backdrop { background: rgba(0,0,0,.6); }
-        .modal-card {
-          background: var(--bg-elev);
-          color: var(--fg);
-          border: 1px solid var(--border);
-        }
-        .modal-header {
-          background: var(--bg-elev-2);
-          border-bottom: 1px solid var(--border);
-          color: var(--fg);
-        }
+        .modal-card { background: var(--bg-elev); color: var(--fg); border: 1px solid var(--border); }
+        .modal-header { background: var(--bg-elev-2); border-bottom: 1px solid var(--border); color: var(--fg); }
         .modal-body { color: var(--fg); }
-        .modal-footer {
-          background: var(--bg-elev-2);
-          border-top: 1px solid var(--border);
-        }
-        .icon-btn {
-          color: var(--fg);
-          background: transparent;
-          border: 1px solid transparent;
-        }
+        .modal-footer { background: var(--bg-elev-2); border-top: 1px solid var(--border); }
+        .icon-btn { color: var(--fg); background: transparent; border: 1px solid transparent; }
         .icon-btn:hover { background: rgba(255,255,255,.08); border-color: var(--border); }
 
         /* Wizard steps */
         .steps .step { color: var(--fg-muted); }
-        .steps .step[aria-current="step"],
-        .steps .step.active { color: var(--fg); font-weight: 600; }
+        .steps .step[aria-current="step"], .steps .step.active { color: var(--fg); font-weight: 600; }
         .step-pane h3 { color: var(--fg); }
 
         /* Segmented control */
-        .segmented {
-          display: inline-flex;
-          background: #0c1017;
-          border: 1px solid var(--border);
-          border-radius: 8px;
-          overflow: hidden;
-        }
+        .segmented { display: inline-flex; background: #0c1017; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
         .segmented input { display:none; }
-        .segmented label {
-          padding: 6px 10px;
-          color: var(--fg-muted);
-          cursor: pointer;
-          user-select: none;
-        }
-        .segmented input:checked + label {
-          background: #1a1f29;
-          color: var(--fg);
-        }
+        .segmented label { padding: 6px 10px; color: var(--fg-muted); cursor: pointer; user-select: none; }
+        .segmented input:checked + label { background: #1a1f29; color: var(--fg); }
 
         /* Key-value editor block */
         .kv-editor { background: #0b0f16; border: 1px solid var(--border); }
 
-        /* Status colors in table if вы их используете классами */
-        .status-2xx { color: var(--ok); }
-        .status-4xx, .status-5xx { color: var(--err); }
-
         /* Focus visibility */
-        :focus-visible {
-          outline: 2px solid var(--accent);
-          outline-offset: 2px;
-        }
+        :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
         /* Toast */
-        .toast {
-          background: #0b0e13;
-          color: var(--fg);
-          border: 1px solid var(--border);
-          box-shadow: 0 10px 30px rgba(0,0,0,.4);
-        }
+        .toast { background: #0b0e13; color: var(--fg); border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,.4); }
     </style>
 </head>
 <body class="dark">
 <header class="topbar">
     <div class="container">
         <h1>WireMock Proxy — Strawberry</h1>
+
+        <div class="spacer"></div>
+
+        <!-- Session moved INSIDE the container and aligned inline -->
+        <div class="session" role="group" aria-label="Mock session">
+            <span class="label">Session</span>
+            <!-- shows full header line for easy copy -->
+            <input id="sessionHeaderLine" class="mono" type="text" readonly value="X-Mock-Session-Id: " />
+            <button id="copySessionBtn" class="btn" title="Copy 'X-Mock-Session-Id' header">Copy</button>
+            <button id="regenSessionBtn" class="btn" title="Generate new session id">Regenerate</button>
+        </div>
+
         <div class="topbar-actions">
             <button id="refreshBtn" class="btn">Refresh</button>
             <button id="autoToggleBtn" class="btn btn-secondary" aria-pressed="true">Auto: On</button>
