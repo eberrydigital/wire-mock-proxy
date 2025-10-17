@@ -1,6 +1,7 @@
 package tests
 
 import com.github.tomakehurst.wiremock.WireMockServer
+import com.github.tomakehurst.wiremock.common.Slf4jNotifier
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import okhttp3.OkHttpClient
 import org.junit.jupiter.api.AfterEach
@@ -16,7 +17,7 @@ import java.util.concurrent.TimeUnit
 
 @ExtendWith(SystemStubsExtension::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-abstract class ProxyTestBase {
+abstract class BaseTest {
 
     protected lateinit var upstream: WireMockServer
     protected lateinit var proxy: WireMockServer
@@ -36,7 +37,10 @@ abstract class ProxyTestBase {
     @BeforeEach
     fun setUp() {
         // 1) As an upstream we just use another WireMockServer that does not mock anything
-        upstream = WireMockServer(options().dynamicPort())
+        upstream = WireMockServer(  options()
+            .dynamicPort()
+            .notifier(Slf4jNotifier(false))
+            .disableRequestJournal())
         upstream.start()
 
         // 2) ENV для proxy
@@ -47,7 +51,6 @@ abstract class ProxyTestBase {
 
         // 3) Here we configure the server under the test
         proxy = ServerBootstrap.start()
-        proxy.start()
     }
 
     @AfterEach

@@ -5,6 +5,8 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
+import se.strawberry.common.Json
+import se.strawberry.stubs.dto.CreateStubRequest
 
 object ProxyApi {
     private val JSON = "application/json; charset=utf-8".toMediaType()
@@ -17,18 +19,19 @@ object ProxyApi {
         client: OkHttpClient,
         proxyBaseUrl: String,
         targetService: String,
-        stubJsonBody: String,
+        stub: CreateStubRequest,
         sessionId: String? = null
     ): Response {
+        val body = Json.mapper.writeValueAsString(stub).toRequestBody(JSON)
+
         val req = Request.Builder()
             .url("$proxyBaseUrl/_proxy-api/stubs")
             .addHeader("Content-Type", "application/json")
-            .post(stubJsonBody.toRequestBody(JSON))
             .addHeader("X-Mock-Target-Service", targetService)
-            .apply {
-                if (sessionId != null) addHeader("X-Mock-Session-Id", sessionId)
-            }
+            .apply { if (sessionId != null) addHeader("X-Mock-Session-Id", sessionId) }
+            .post(body)
             .build()
+
         return client.newCall(req).execute()
     }
 }
