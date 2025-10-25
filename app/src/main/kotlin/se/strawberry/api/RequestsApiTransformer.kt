@@ -16,7 +16,6 @@ import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
 
 class RequestsApiTransformer : ResponseTransformerV2 {
-
     private val mapper = Json.mapper
     private val stubs = StubsHandler(mapper)
     private val requests = RequestsHandler(mapper)

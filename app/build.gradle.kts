@@ -39,6 +39,12 @@ dependencies {
 
     // Use JUnit Jupiter for testing.
     testImplementation(libs.junit.jupiter)
+    testImplementation("com.squareup.okhttp3:okhttp:5.1.0")
+    testImplementation("uk.org.webcompere:system-stubs-jupiter:2.1.8")
+    testImplementation(kotlin("test"))
+
+    testRuntimeOnly("ch.qos.logback:logback-classic:1.5.+")
+    testRuntimeOnly("org.slf4j:jul-to-slf4j:2.0.+")
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
@@ -58,6 +64,9 @@ kotlin {
 }
 
 tasks.named<Test>("test") {
+    jvmArgs("-XX:+EnableDynamicAgentLoading")
+    jvmArgs("-Xshare:off")
     // Use JUnit Platform for unit tests.
     useJUnitPlatform()
 }
+

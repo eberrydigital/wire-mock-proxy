@@ -1,6 +1,5 @@
 package se.strawberry.stubs.dto
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.github.tomakehurst.wiremock.client.MappingBuilder
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder
 import com.github.tomakehurst.wiremock.client.WireMock.any
@@ -23,14 +22,14 @@ import com.github.tomakehurst.wiremock.extension.Parameters
 import com.github.tomakehurst.wiremock.matching.UrlPattern
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import se.strawberry.common.Headers.X_MOCK_TARGET_SERVICE
-import se.strawberry.common.ListenerNames
+import se.strawberry.common.Json
 import se.strawberry.common.MatcherNames
 import se.strawberry.common.MetadataKeys
 import se.strawberry.common.TemplateNames
 import se.strawberry.common.TransformerNames
 
 object StubBuilder {
-    private val mapper = jacksonObjectMapper()
+    private val mapper = Json.mapper
 
     fun buildStubMapping(dto: CreateStubRequest): StubMapping {
         val mappingBuilder = when (dto.request.url.type) {
@@ -115,9 +114,9 @@ object StubBuilder {
 
         val expiresAtMs: Long? = dto.ephemeral?.ttlMs?.let { System.currentTimeMillis() + it }
         expiresAtMs?.let { builder = builder.andMatching(MatcherNames.TTL_GUARD, Parameters.one("expiresAtMs", it)) }
-        if (dto.ephemeral?.uses != null || expiresAtMs != null) {
-            builder = builder.withServeEventListener(ListenerNames.EPHEMERAL_LISTENER, Parameters.empty())
-        }
+//        if (dto.ephemeral?.uses != null || expiresAtMs != null) {
+//            builder = builder.withServeEventListener(ListenerNames.EPHEMERAL_LISTENER, Parameters.empty())
+//        }
 
         val stub = builder.build()
 
