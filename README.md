@@ -49,10 +49,10 @@ DYN_ALLOWED_PORTS=80,443 SERVICE_MAP=omni=https://api.test.eberry.digital PORT=8
 ## 4) Ephemeral stubs
 Ephemeral stubs are created via the UI or API and have a limited lifetime defined by either:
 
-| `uses` | `ttl` | Time Now                 | Result            | Explanation                                                          |
-|--------|-------|--------------------------|-------------------|----------------------------------------------------------------------|
-| `> 0`  | null  | *                        | ✅ Apply stubbing  | Stub without TTL respects uses                                       |
-| `> 0`  | set   | `now <= createdAt + ttl` | ✅ Apply stubbing  | Both TTL and uses are set. TTL is in the future, uses is positive.   |
-| `<= 0` | set   | `now <= createdAt + ttl` | ❌ Do not apply    | Both TTL and uses are set. TTL is in the future, uses <= 0           |
-| `> 0`  | set   | `now > createdAt + ttl`  | ❌ Do not apply    | Both TTL and uses are set. TTL is in the past.                       |
-| `null` | set   | `now <= createdAt + ttl` | ✅ Apply stubbing  | Stub without uses respects TTL only.                                 |
+| `id`    | `uses` | `ttl` | Time Now                 | Result            | Explanation                                                          |
+|---------|--------|-------|--------------------------|-------------------|----------------------------------------------------------------------|
+| `EPH_1` | `> 0`  | null  | *                        | ✅ Apply stubbing  | Stub without TTL respects uses                                       |
+| `EPH_2` | `> 0`  | set   | `now <= createdAt + ttl` | ✅ Apply stubbing  | Both TTL and uses are set. TTL is in the future, uses is positive.   |
+| `EPH_3` | `<= 0` | set   | `now <= createdAt + ttl` | ❌ Do not apply    | Both TTL and uses are set. TTL is in the future, uses <= 0           |
+| `EPH_4` | `> 0`  | set   | `now > createdAt + ttl`  | ❌ Do not apply    | Both TTL and uses are set. TTL is in the past.                       |
+| `EPH_5` | `null` | set   | `now <= createdAt + ttl` | ✅ Apply stubbing  | Stub without uses respects TTL only.                                 |

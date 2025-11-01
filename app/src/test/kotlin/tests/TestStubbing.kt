@@ -2,11 +2,12 @@ package tests
 
 import api.ProxyApi
 import com.github.tomakehurst.wiremock.client.WireMock.*
-import okhttp3.Request
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
 import org.junit.jupiter.api.Test
+import se.strawberry.stubs.dto.Ephemeral
 import stubs.Stubs
+import kotlin.random.Random
 
 class TestStubbingOnlyWorksWithinTheSameSession : BaseTest() {
 
@@ -14,9 +15,10 @@ class TestStubbingOnlyWorksWithinTheSameSession : BaseTest() {
     fun test() {
         val upstreamStatus = 201
         val upstreamBody = "upstream-default-response"
+        val stubBody = "stub-response"
         val endpoint = "/api/test"
         val stubStatus = 200
-        val sessionId = "A-123"
+        val sessionId = Random.hashCode().toString()
 
         upstream.stubFor(
             get(urlEqualTo(endpoint))
@@ -29,8 +31,8 @@ class TestStubbingOnlyWorksWithinTheSameSession : BaseTest() {
         val stub = Stubs.getExactStaticText(
             url = endpoint,
             status = stubStatus,
-            bodyText = upstreamBody,
-            uses = 3
+            bodyText = stubBody,
+            ephemeral = Ephemeral(uses = 3)
         )
 
         val createResp = ProxyApi.createStub(
@@ -40,28 +42,20 @@ class TestStubbingOnlyWorksWithinTheSameSession : BaseTest() {
             stub = stub,
             sessionId = sessionId
         )
+
         assertThat("Stub creation should be successful (${createResp.code})",
             createResp.code in listOf(200, 201), equalTo(true))
         createResp.close()
 
-        fun call(sessionId: String): okhttp3.Response {
-            val req = Request.Builder()
-                .url("${proxyBaseUrl()}$endpoint")
-                .addHeader("X-Mock-Target-Service", upstreamServiceName)
-                .addHeader("X-Mock-Session-Id", sessionId)
-                .build()
-            return http.newCall(req).execute()
-        }
-
-        call(sessionId).use { responseForCalWithKnownSession ->
+        call(sessionId, endpoint).use { responseForCalWithKnownSession ->
             assertThat(responseForCalWithKnownSession.code, equalTo(stubStatus))
-            assertThat(responseForCalWithKnownSession.body.string(), equalTo(upstreamBody))
+            assertThat(responseForCalWithKnownSession.body.string(), equalTo(stubBody))
         }
-        call(sessionId).use { responseForCalWithKnownSession ->
+        call(sessionId, endpoint).use { responseForCalWithKnownSession ->
             assertThat(responseForCalWithKnownSession.code, equalTo(stubStatus))
-            assertThat(responseForCalWithKnownSession.body.string(), equalTo(upstreamBody))
+            assertThat(responseForCalWithKnownSession.body.string(), equalTo(stubBody))
         }
-        call("unknown").use { responseWithUnknownSession ->
+        call("unknown", endpoint).use { responseWithUnknownSession ->
             assertThat(responseWithUnknownSession.code, equalTo(upstreamStatus))
             assertThat(responseWithUnknownSession.body.string(), equalTo(upstreamBody))
         }
