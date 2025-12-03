@@ -4,6 +4,7 @@ import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.common.Slf4jNotifier
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import okhttp3.OkHttpClient
+import okhttp3.Request
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
@@ -57,6 +58,16 @@ abstract class BaseTest {
     fun tearDown() {
         try { proxy.stop() } catch (_: Throwable) {}
         try { upstream.stop() } catch (_: Throwable) {}
+    }
+
+
+    fun call(sessionId: String?, endpoint: String): okhttp3.Response {
+        val req = Request.Builder()
+            .url("${proxyBaseUrl()}$endpoint")
+            .addHeader("X-Mock-Target-Service", upstreamServiceName)
+            .apply { if (sessionId != null) addHeader("X-Mock-Session-Id", sessionId) }
+            .build()
+        return http.newCall(req).execute()
     }
 
     protected fun proxyBaseUrl(): String = "http://localhost:${proxy.port()}"

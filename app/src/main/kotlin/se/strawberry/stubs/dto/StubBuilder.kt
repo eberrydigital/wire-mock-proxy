@@ -34,9 +34,7 @@ object StubBuilder {
     fun buildStubMapping(dto: CreateStubRequest): StubMapping {
         val mappingBuilder = when (dto.request.url.type) {
             UrlMatchType.EXACT -> requestMatching(method = dto.request.method, url = urlEqualTo(dto.request.url.value))
-            UrlMatchType.LOOSENED -> requestMatching(method = dto.request.method,
-                url = urlMatching(dto.request.url.value)
-            )
+            UrlMatchType.LOOSENED -> requestMatching(method = dto.request.method, url = urlMatching(dto.request.url.value))
         }
 
         dto.request.headers.forEach { (name, headerMatch) ->
@@ -114,9 +112,6 @@ object StubBuilder {
 
         val expiresAtMs: Long? = dto.ephemeral?.ttlMs?.let { System.currentTimeMillis() + it }
         expiresAtMs?.let { builder = builder.andMatching(MatcherNames.TTL_GUARD, Parameters.one("expiresAtMs", it)) }
-//        if (dto.ephemeral?.uses != null || expiresAtMs != null) {
-//            builder = builder.withServeEventListener(ListenerNames.EPHEMERAL_LISTENER, Parameters.empty())
-//        }
 
         val stub = builder.build()
 

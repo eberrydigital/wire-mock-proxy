@@ -8,8 +8,7 @@ object Stubs {
         url: String,
         status: Int = 200,
         bodyText: String = "ok",
-        uses: Int? = null,
-        ttlMs: Long? = null
+        ephemeral: Ephemeral? = null,
     ): CreateStubRequest {
         val urlDef = UrlMatch(
             type = UrlMatchType.EXACT,
@@ -31,8 +30,6 @@ object Stubs {
             bodyJson = null,
             patch = null
         )
-
-        val ephemeral = if (uses != null || ttlMs != null) Ephemeral(uses = uses, ttlMs = ttlMs) else null
 
         return CreateStubRequest(
             request = reqDef,
