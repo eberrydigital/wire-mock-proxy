@@ -18,7 +18,7 @@ This document captures the desired end‑state to guide refactoring. It’s tail
 
 ## Request flow
 
-1. Client → `https://mock-gateway.company.com/{sessionId}/...` or via header `X-Mock-Session`
+1. Client → `https://mock-gateway.company.com/{sessionId}/...` or via header `X-Mock-Session-Id`
 2. Mock Gateway extracts/guarantees session header
 3. Request goes into embedded WireMock
 4. WireMock matches stubs scoped by session header; otherwise proxies to Service B

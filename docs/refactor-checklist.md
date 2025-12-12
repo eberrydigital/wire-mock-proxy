@@ -13,11 +13,11 @@ This is the actionable plan to bring the current codebase to the target architec
 - R1.3 refactor: add repositories SessionRepository, RecordedRequestRepository, StubRepository (interfaces) Done
 - R1.4 refactor: adapt existing implementation behind the new interfaces (keep public API stable) Done
 - R1.5 test: smoke tests still pass (no regression) Done
-- R1.6 Install necessary dependencies and prepare for migration to using Ktor in the future. Refactor this checklist to outline when Ktor refactoring is done. Pending
-  - Note: Prepare a Ktor migration plan and dependency list (ktor-server-core, ktor-server-netty, ktor-websockets, ktor-client, logging). Align endpoints and routing strategy.
+- R1.6 Install necessary dependencies and prepare for migration to using Ktor in the future. Refactor this checklist to outline when Ktor refactoring is done. Pending 
+  - Note: Prepare a Ktor migration plan and dependency list (ktor-server-core, ktor-server-netty, ktor-websockets, ktor-client, logging). Align endpoints and routing strategy. Done
 
 ## R2 — Sessions (compat) 
-- R2.1 feat: add Session entity, migration, and repository implementation
+- R2.1 feat: add Session entity, migration, and repository implementation Done
 - R2.2 feat: extract sessionId from path /{sessionId}/… or header X-Mock-Session (proxy layer)
 - R2.3 feat: enforce/propagate X-Mock-Session to WireMock for matching
 - R2.4 test: integration tests for session extraction and header propagation

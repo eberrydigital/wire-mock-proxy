@@ -149,7 +149,7 @@ object JsonMerge {
     fun merge(target: JsonNode, patch: JsonNode): JsonNode {
         val result = target.deepCopy<JsonNode>()
         if (patch.isObject) {
-            val fields = patch.fields()
+            val fields = patch.properties().iterator()
             while (fields.hasNext()) {
                 val entry = fields.next()
                 val k = entry.key
