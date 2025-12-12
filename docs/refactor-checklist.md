@@ -11,8 +11,10 @@ This is the actionable plan to bring the current codebase to the target architec
 - R1.1 refactor: introduce packages domain.session, domain.traffic, domain.stub (move types) Done
 - R1.2 refactor: add service interfaces SessionService, TrafficService, StubService, WireMockClient Done
 - R1.3 refactor: add repositories SessionRepository, RecordedRequestRepository, StubRepository (interfaces) Done
-- R1.4 refactor: adapt existing implementation behind the new interfaces (keep public API stable)
-- R1.5 test: smoke tests still pass (no regression)
+- R1.4 refactor: adapt existing implementation behind the new interfaces (keep public API stable) Done
+- R1.5 test: smoke tests still pass (no regression) Done
+- R1.6 Install necessary dependencies and prepare for migration to using Ktor in the future. Refactor this checklist to outline when Ktor refactoring is done. Pending
+  - Note: Prepare a Ktor migration plan and dependency list (ktor-server-core, ktor-server-netty, ktor-websockets, ktor-client, logging). Align endpoints and routing strategy.
 
 ## R2 — Sessions (compat) 
 - R2.1 feat: add Session entity, migration, and repository implementation
@@ -80,4 +82,3 @@ Rewrite vs Refactor:
 - A rewrite would only be faster if the server framework is absent or the code is tightly coupled and untested. The repo shows tests and structure, so incremental refactor offers lower risk and faster delivery of features.
 
 Conclusion: Proceed with refactoring. Start with R1 to establish clean boundaries, then add sessions and persistence.
-
