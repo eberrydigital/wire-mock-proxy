@@ -61,6 +61,24 @@ This is the actionable plan to bring the current codebase to the target architec
 
 ---
 
+## RK — Ktor Migration & Public API (backend-first, no UI serving)
+- RK0 docs: add Ktor migration plan and cutover strategy (docs/ktor-migration.md) Done
+- RK1 chore: scaffold minimal Ktor Application with /_proxy-api/health and route placeholders
+- RK2 feat: start embedded WireMock on an internal port; implement Ktor reverse proxy for all non-/_proxy-api/* paths
+- RK3 feat(api): implement /_proxy-api/stubs (create/list/delete) in Ktor, delegating to StubService
+- RK4 feat(api): implement /_proxy-api/requests (list/byId/clear/export) in Ktor, delegating to TrafficService
+- RK5 feat(api): implement /_proxy-api/sessions (create/get/close) in Ktor, delegating to SessionService
+- RK6 test: parity tests for all Ktor API routes vs current transformer outputs (golden files as needed)
+- RK7 cutover: switch startup to Ktor front door + WireMock internal; remove RequestsApiTransformer
+- RK8 cleanup: keep matchers/listeners/post-serve hooks; remove any legacy API code paths
+
+Notes:
+- Backend-first: this service does not serve /_proxy-ui; a separate frontend (if any) consumes the API.
+- Route parity: paths and payloads remain identical; Ktor routes reuse existing services.
+- WebSocket (/ws) will be added in R6.
+
+---
+
 ## Effort Estimate & Recommendation
 
 Assumptions:
