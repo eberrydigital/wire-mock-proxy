@@ -15,6 +15,9 @@ import se.strawberry.common.MetadataKeys
 import se.strawberry.domain.stub.CreateStubRequest
 import se.strawberry.stubs.dto.StubBuilder
 import com.github.tomakehurst.wiremock.http.Response as WMResponse
+import se.strawberry.repository.session.InMemorySessionRepository
+import se.strawberry.repository.session.SessionRepository
+import java.util.UUID
 
 /**
  * RK1/RK2/RK3: Ktor Application scaffold
@@ -132,6 +135,66 @@ fun Application.mockGateway() {
                 val handler = RequestsHandler(mapper)
                 val resp: WMResponse = handler.export()
                 respondFromWireMock(call, resp)
+            }
+        }
+
+        // RK5: Sessions API
+        val sessionsRepo: SessionRepository = InMemorySessionRepository()
+        route("/_proxy-api/sessions") {
+            // Create session
+            post {
+                val id = UUID.randomUUID().toString()
+                val now = System.currentTimeMillis()
+                val s = SessionRepository.Session(
+                    id = id,
+                    name = null,
+                    owner = null,
+                    createdAt = now,
+                    expiresAt = null,
+                    status = SessionRepository.Session.Status.ACTIVE
+                )
+                sessionsRepo.create(s)
+                val payload = Json.mapper.writeValueAsString(
+                    mapOf(
+                        "id" to s.id,
+                        "status" to s.status.name,
+                        "createdAt" to s.createdAt,
+                        "expiresAt" to s.expiresAt
+                    )
+                )
+                call.respondText(payload, ContentType.Application.Json, HttpStatusCode.Created)
+            }
+            // Get session by id
+            get("/{id}") {
+                val id = call.parameters["id"]
+                val s = id?.let { sessionsRepo.get(it) }
+                if (s == null) {
+                    call.respondText("{\"error\":\"not_found\"}", ContentType.Application.Json, HttpStatusCode.NotFound)
+                } else {
+                    val payload = Json.mapper.writeValueAsString(
+                        mapOf(
+                            "id" to s.id,
+                            "status" to s.status.name,
+                            "createdAt" to s.createdAt,
+                            "expiresAt" to s.expiresAt
+                        )
+                    )
+                    call.respondText(payload, ContentType.Application.Json)
+                }
+            }
+            // Close session
+            post("/{id}/close") {
+                val id = call.parameters["id"]
+                if (id.isNullOrBlank()) {
+                    call.respondText("{\"error\":\"bad_request\"}", ContentType.Application.Json, HttpStatusCode.BadRequest)
+                } else {
+                    val ok = sessionsRepo.close(id)
+                    if (!ok) {
+                        call.respondText("{\"error\":\"not_found\"}", ContentType.Application.Json, HttpStatusCode.NotFound)
+                    } else {
+                        call.respond(HttpStatusCode.NoContent)
+                    }
+                }
             }
         }
 
