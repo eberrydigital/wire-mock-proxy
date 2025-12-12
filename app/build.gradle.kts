@@ -45,6 +45,15 @@ dependencies {
 
     testRuntimeOnly("ch.qos.logback:logback-classic:1.5.+")
     testRuntimeOnly("org.slf4j:jul-to-slf4j:2.0.+")
+
+    val ktorVersion = "3.3.3"
+    implementation("io.ktor:ktor-server-core-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-server-netty-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-server-websockets-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-client-core-jvm:$ktorVersion")
+    implementation("io.ktor:ktor-client-java:$ktorVersion")
+    implementation("io.ktor:ktor-serialization-jackson-jvm:$ktorVersion")
+    testImplementation("io.ktor:ktor-server-tests-jvm:$ktorVersion")
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
@@ -69,4 +78,3 @@ tasks.named<Test>("test") {
     // Use JUnit Platform for unit tests.
     useJUnitPlatform()
 }
-
