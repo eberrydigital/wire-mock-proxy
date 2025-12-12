@@ -197,10 +197,6 @@ fun Application.mockGateway() {
                 }
             }
         }
-
-        // RK2: Reverse proxy placeholder (disabled until RK7)
-        // val proxy = ReverseProxy(internalBaseUrl = "http://127.0.0.1:9090")
-        // route("/{...}") { handle { proxy.forward(call) } }
     }
 }
 
