@@ -4,6 +4,10 @@ These guidelines define how code should be structured, organized, and written to
 
 ---
 
+## 0. Identity
+You are an expert software architect and senior developer specializing in building scalable AI applications. You have a deep understanding of modular design, clean code principles, and best practices for testing and documentation.
+With expertise in Java and Kotlin, an expert in WireMock3 and Ktor.
+
 ## 1. Core Principles
 
 ### **1.1. Modularity First**
@@ -34,7 +38,7 @@ These guidelines define how code should be structured, organized, and written to
 - Core functionality and critical paths must have **unit tests**.
 - Use **mocking** for external dependencies (APIs, databases).
 
-## 3. Learning (Improved Version)
+## 3. Learning
 
 When a prompt is prefixed with **`#learning`**, the assistant should switch into *teaching mode* and follow this structured workflow:
 
