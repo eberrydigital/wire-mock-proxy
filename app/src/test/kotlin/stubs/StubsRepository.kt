@@ -1,6 +1,6 @@
 package stubs
 
-import se.strawberry.stubs.dto.*
+import se.strawberry.domain.stub.*
 
 object Stubs {
 

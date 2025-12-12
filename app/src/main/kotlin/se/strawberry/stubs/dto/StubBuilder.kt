@@ -27,6 +27,13 @@ import se.strawberry.common.MatcherNames
 import se.strawberry.common.MetadataKeys
 import se.strawberry.common.TemplateNames
 import se.strawberry.common.TransformerNames
+import se.strawberry.domain.stub.BodyMatchMode
+import se.strawberry.domain.stub.BodyMatcherType
+import se.strawberry.domain.stub.CreateStubRequest
+import se.strawberry.domain.stub.HeaderMatchType
+import se.strawberry.domain.stub.ReqMatchMethods
+import se.strawberry.domain.stub.RespMode
+import se.strawberry.domain.stub.UrlMatchType
 
 object StubBuilder {
     private val mapper = Json.mapper

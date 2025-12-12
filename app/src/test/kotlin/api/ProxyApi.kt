@@ -6,7 +6,7 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import se.strawberry.common.Json
-import se.strawberry.stubs.dto.CreateStubRequest
+import se.strawberry.domain.stub.CreateStubRequest
 
 object ProxyApi {
     private val JSON = "application/json; charset=utf-8".toMediaType()

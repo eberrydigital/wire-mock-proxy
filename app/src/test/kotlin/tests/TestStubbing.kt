@@ -5,7 +5,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.*
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
 import org.junit.jupiter.api.Test
-import se.strawberry.stubs.dto.Ephemeral
+import se.strawberry.domain.stub.Ephemeral
 import stubs.Stubs
 import kotlin.random.Random
 

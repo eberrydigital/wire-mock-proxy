@@ -2,9 +2,9 @@ package se.strawberry.api.handlers
 
 import com.github.tomakehurst.wiremock.http.Request
 import se.strawberry.common.Headers
-import se.strawberry.stubs.dto.CreateStubRequest
-import se.strawberry.stubs.dto.HeaderMatch
-import se.strawberry.stubs.dto.HeaderMatchType
+import se.strawberry.domain.stub.CreateStubRequest
+import se.strawberry.domain.stub.HeaderMatch
+import se.strawberry.domain.stub.HeaderMatchType
 
 object SessionScope {
 

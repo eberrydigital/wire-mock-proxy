@@ -9,7 +9,7 @@ import com.github.tomakehurst.wiremock.http.Response
 import se.strawberry.admin.ServerRef
 import se.strawberry.common.Headers
 import se.strawberry.common.MetadataKeys
-import se.strawberry.stubs.dto.CreateStubRequest
+import se.strawberry.domain.stub.CreateStubRequest
 import se.strawberry.stubs.dto.StubBuilder
 
 class StubsHandler(

@@ -3,9 +3,9 @@
 This is the actionable plan to bring the current codebase to the target architecture. Each step is sized to be one commit.
 
 ## R0 — Analysis & Design (docs only)
-- R0.1 docs: add current architecture overview and pain points (docs/current-architecture.md)
-- R0.2 docs: define target architecture and refactoring strategy (docs/target-architecture.md)
-- R0.3 docs: add this refactor checklist (docs/refactor-checklist.md)
+- R0.1 docs: add current architecture overview and pain points (docs/current-architecture.md) Done
+- R0.2 docs: define target architecture and refactoring strategy (docs/target-architecture.md) Done
+- R0.3 docs: add this refactor checklist (docs/refactor-checklist.md) Done
 
 ## R1 — Modular restructuring (no behavior change)
 - R1.1 refactor: introduce packages domain.session, domain.traffic, domain.stub (move types)

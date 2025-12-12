@@ -1,4 +1,4 @@
-package se.strawberry.stubs.dto
+package se.strawberry.domain.stub
 
 data class CreateStubRequest(
     val request: ReqMatch,
@@ -63,4 +63,3 @@ enum class BodyMatchMode {
     JSON,
     TEXT
 }
-
