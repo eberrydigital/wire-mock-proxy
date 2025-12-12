@@ -7,12 +7,14 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import se.strawberry.admin.ServerRef
+import se.strawberry.api.handlers.RequestsHandler
 import se.strawberry.api.handlers.SessionScope
 import se.strawberry.common.Headers
 import se.strawberry.common.Json
 import se.strawberry.common.MetadataKeys
 import se.strawberry.domain.stub.CreateStubRequest
 import se.strawberry.stubs.dto.StubBuilder
+import com.github.tomakehurst.wiremock.http.Response as WMResponse
 
 /**
  * RK1/RK2/RK3: Ktor Application scaffold
@@ -94,8 +96,60 @@ fun Application.mockGateway() {
             }
         }
 
+        // RK4: Requests API
+        route("/_proxy-api/requests") {
+            // List
+            get {
+                val mapper = Json.mapper
+                val handler = RequestsHandler(mapper)
+                val qp = call.request.queryParameters
+                val query: Map<String, String> = qp.names().associateWith { name -> qp.getAll(name)?.lastOrNull() ?: "" }
+                val resp: WMResponse = handler.list(query)
+                respondFromWireMock(call, resp)
+            }
+            // Get by id
+            get("/{id}") {
+                val mapper = Json.mapper
+                val handler = RequestsHandler(mapper)
+                val id = call.parameters["id"]
+                if (id.isNullOrBlank()) {
+                    call.respondText("{\"error\":\"bad_request\"}", ContentType.Application.Json, HttpStatusCode.BadRequest)
+                } else {
+                    val resp: WMResponse = handler.byId(id)
+                    respondFromWireMock(call, resp)
+                }
+            }
+            // Clear
+            delete {
+                val mapper = Json.mapper
+                val handler = RequestsHandler(mapper)
+                val resp: WMResponse = handler.clear()
+                respondFromWireMock(call, resp)
+            }
+            // Export NDJSON
+            get("/export") {
+                val mapper = Json.mapper
+                val handler = RequestsHandler(mapper)
+                val resp: WMResponse = handler.export()
+                respondFromWireMock(call, resp)
+            }
+        }
+
         // RK2: Reverse proxy placeholder (disabled until RK7)
         // val proxy = ReverseProxy(internalBaseUrl = "http://127.0.0.1:9090")
         // route("/{...}") { handle { proxy.forward(call) } }
+    }
+}
+
+private suspend fun respondFromWireMock(call: ApplicationCall, wm: WMResponse) {
+    val status = HttpStatusCode.fromValue(wm.status)
+    val body = wm.bodyAsString ?: ""
+    val ct = wm.headers?.getHeader(Headers.CONTENT_TYPE)?.takeIf { it.isPresent }?.firstValue()
+    if (ct != null) {
+        // If content-type present, use respondText with that content type
+        call.respondText(body, ContentType.parse(ct), status)
+    } else {
+        // Fallback to bytes
+        call.respondBytes(body.toByteArray(), status = status)
     }
 }
