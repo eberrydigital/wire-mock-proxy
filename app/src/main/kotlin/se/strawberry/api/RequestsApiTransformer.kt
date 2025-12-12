@@ -47,6 +47,4 @@ class RequestsApiTransformer : ResponseTransformerV2 {
             .headers(HttpHeaders(HttpHeader.httpHeader(Headers.CONTENT_TYPE, Headers.JSON)))
             .body("""{"error":"not_found"}""")
             .build()
-
-    // --------- Router ---------
 }

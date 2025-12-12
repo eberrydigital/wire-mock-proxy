@@ -203,10 +203,10 @@ fun Application.mockGateway() {
 private suspend fun respondFromWireMock(call: ApplicationCall, wm: WMResponse) {
     val status = HttpStatusCode.fromValue(wm.status)
     val body = wm.bodyAsString ?: ""
-    val ct = wm.headers?.getHeader(Headers.CONTENT_TYPE)?.takeIf { it.isPresent }?.firstValue()
-    if (ct != null) {
+    val contentType = wm.headers?.getHeader(Headers.CONTENT_TYPE)?.takeIf { it.isPresent }?.firstValue()
+    if (contentType != null) {
         // If content-type present, use respondText with that content type
-        call.respondText(body, ContentType.parse(ct), status)
+        call.respondText(body, ContentType.parse(contentType), status)
     } else {
         // Fallback to bytes
         call.respondBytes(body.toByteArray(), status = status)
