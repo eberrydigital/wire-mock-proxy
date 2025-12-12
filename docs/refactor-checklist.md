@@ -18,9 +18,12 @@ This is the actionable plan to bring the current codebase to the target architec
 
 ## R2 — Sessions (compat) 
 - R2.1 feat: add Session entity, migration, and repository implementation Done
-- R2.2 feat: extract sessionId from path /{sessionId}/… or header X-Mock-Session (proxy layer)
-- R2.3 feat: enforce/propagate X-Mock-Session to WireMock for matching
-- R2.4 test: integration tests for session extraction and header propagation
+- R2.2 feat: header X-Mock-Session-Id (proxy layer) Done
+  - Decision: standardize on header-only session handling; path-based extraction intentionally skipped to reduce ambiguity and complexity.
+- R2.3 feat: enforce/propagate X-Mock-Session-Id to WireMock for matching Done
+  - Enforced in DynamicRoutingGuard (400 on missing header); propagation is implicit via client header and matching logic in stubs.
+- R2.4 test: integration tests for session extraction and header propagation Pending
+  - Added TestSessionHeaderRequired; existing tests cover positive path. Consider adding explicit positive-case test if needed.
 
 ## R3 — Embedded WireMock consolidation & proxy routing
 - R3.1 feat: centralize embedded WireMock configuration (base proxy URL, mappings dir)

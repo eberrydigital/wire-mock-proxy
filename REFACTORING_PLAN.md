@@ -85,7 +85,7 @@ Estimate: 1–1.5 days
 Steps (commits):
 1. feat: extract sessionId from path or headers in proxy pipeline
    - Central middleware to resolve `sessionId` and attach to request context.
-2. feat: enforce X-Mock-Session header for wiremock traffic
+2. feat: enforce X-Mock-Session-Id header for wiremock traffic
    - Always send `X-Mock-Session: {sessionId}` to WireMock.
 3. refactor: update stub creation to use session-aware mappings
    - All new mappings include header matcher for `X-Mock-Session`.

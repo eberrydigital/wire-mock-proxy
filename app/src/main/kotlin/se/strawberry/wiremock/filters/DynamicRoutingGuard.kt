@@ -35,6 +35,13 @@ class DynamicRoutingGuard(
             return deny(400, "missing-service", "Header ${Headers.X_MOCK_TARGET_SERVICE} is required")
         }
 
+        // R2.2: enforce session header presence
+        val sessionHeader = request.header(Headers.X_MOCK_SESSION_ID)
+        val sessionId = if (sessionHeader.isPresent) sessionHeader.firstValue() else null
+        if (sessionId.isNullOrBlank()) {
+            return deny(400, "missing-session", "Header ${Headers.X_MOCK_SESSION_ID} is required")
+        }
+
         val origin = services[serviceName]
             ?: return deny(404, "unknown-service", "Service '$serviceName' is not defined in SERVICE_MAP")
 
