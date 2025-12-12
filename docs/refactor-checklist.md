@@ -10,7 +10,7 @@ This is the actionable plan to bring the current codebase to the target architec
 ## R1 — Modular restructuring (no behavior change)
 - R1.1 refactor: introduce packages domain.session, domain.traffic, domain.stub (move types) Done
 - R1.2 refactor: add service interfaces SessionService, TrafficService, StubService, WireMockClient Done
-- R1.3 refactor: add repositories SessionRepository, RecordedRequestRepository, StubRepository (interfaces)
+- R1.3 refactor: add repositories SessionRepository, RecordedRequestRepository, StubRepository (interfaces) Done
 - R1.4 refactor: adapt existing implementation behind the new interfaces (keep public API stable)
 - R1.5 test: smoke tests still pass (no regression)
 
