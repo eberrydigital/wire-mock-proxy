@@ -13,7 +13,7 @@ interface SessionRepository {
         val expiresAt: Long?,
         val status: Status = Status.ACTIVE,
     ) {
-        enum class Status { ACTIVE, CLOSED }
+        enum class Status { ACTIVE, CLOSED, EXPIRED }
     }
 
     fun create(session: Session): Boolean

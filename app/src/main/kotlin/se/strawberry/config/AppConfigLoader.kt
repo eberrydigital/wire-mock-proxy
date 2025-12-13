@@ -30,6 +30,12 @@ object AppConfigLoader {
 
         val uiEnabled = Env.bool("ENABLE_PROXY_UI", true)
 
+        val dynamoEndpoint = Env.str("DYNAMO_ENDPOINT")?.let { URI(it) }
+        val dynamoRegion = Env.str("AWS_REGION", "eu-north-1")!!
+        val sessionsTable = Env.str("DYNAMO_SESSIONS_TABLE", "proxy-sessions")!!
+        val accessKeyId = Env.str("AWS_ACCESS_KEY_ID")
+        val secretAccessKey = Env.str("AWS_SECRET_ACCESS_KEY")
+
         val cfg = AppConfig(
             port = port,
             apiPort = apiPort,
@@ -37,7 +43,14 @@ object AppConfigLoader {
             filesSource = filesSource,
             allowedPorts = allowedPorts,
             services = services,
-            uiEnabled = uiEnabled
+            uiEnabled = uiEnabled,
+            dynamo = DynamoConfig(
+                endpoint = dynamoEndpoint,
+                region = dynamoRegion,
+                sessionsTable = sessionsTable,
+                accessKeyId = accessKeyId,
+                secretAccessKey = secretAccessKey,
+            )
         )
 
         val filesSrcLog = when (filesSource) {
@@ -45,10 +58,13 @@ object AppConfigLoader {
             is AppConfig.FilesSource.Directory -> "dir:${filesSource.path}"
         }
         log.info(
-            "AppConfig => port={}, bind={}, files={}, allowedPorts={}, services={}",
+            "AppConfig => port={}, bind={}, files={}, allowedPorts={}, services={}, dynamoEndpoint={}, dynamoRegion={}, sessionsTable={}",
             cfg.port, cfg.bindAddress, filesSrcLog,
             cfg.allowedPorts.sorted().joinToString(","),
-            cfg.services.keys.sorted().joinToString(",")
+            cfg.services.keys.sorted().joinToString(","),
+            cfg.dynamo.endpoint?.toString() ?: "(default)",
+            cfg.dynamo.region,
+            cfg.dynamo.sessionsTable,
         )
 
         return cfg

@@ -9,6 +9,7 @@ import io.ktor.server.routing.*
 import io.ktor.util.*
 import se.strawberry.common.Headers
 import se.strawberry.common.Json
+import se.strawberry.config.AppConfig
 import se.strawberry.domain.stub.CreateStubRequest
 import se.strawberry.repository.session.SessionRepository
 import java.util.*
@@ -16,8 +17,8 @@ import com.github.tomakehurst.wiremock.http.Response as WMResponse
 
 val DependenciesKey = AttributeKey<AppDependencies>("AppDependencies")
 
-fun Application.installDependencies() {
-    attributes.put(DependenciesKey, buildDependencies())
+fun Application.installDependencies(cfg: AppConfig) {
+    attributes.put(DependenciesKey, buildDependencies(cfg))
 }
 
 fun Application.dependencies(): AppDependencies = attributes[DependenciesKey]

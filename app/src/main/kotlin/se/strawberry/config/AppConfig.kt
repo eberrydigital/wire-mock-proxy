@@ -10,7 +10,8 @@ data class AppConfig(
     val filesSource: FilesSource,
     val allowedPorts: Set<Int>,
     val services: Map<String, URI>,
-    val uiEnabled: Boolean = true
+    val uiEnabled: Boolean = true,
+    val dynamo: DynamoConfig = DynamoConfig()
 ) {
     sealed class FilesSource {
         data class Classpath(val root: String = "wiremock") : FilesSource()

@@ -60,6 +60,9 @@ dependencies {
 
     // DB migrations
     implementation("org.flywaydb:flyway-core:10.16.0")
+
+    implementation("software.amazon.awssdk:dynamodb:2.27.18")
+    implementation("software.amazon.awssdk:auth:2.27.18")
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
