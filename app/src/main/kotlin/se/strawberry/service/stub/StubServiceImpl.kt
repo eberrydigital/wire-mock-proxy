@@ -56,11 +56,10 @@ class StubServiceImpl(
     }
 
     override fun delete(id: String): Response {
-        val sm = wireMockClient.listStubs()
-            .firstOrNull { it.id.equals(id) }
-            ?: return json(404, """{"error":"not_found"}""")
+        val stub = wireMockClient.listStubs()
+            .firstOrNull { it.id.toString().equals(id) } ?: return json(404, """{"error":"not_found"}""")
 
-        wireMockClient.removeStub(sm)
+        wireMockClient.removeStub(stub)
         return Response.response()
             .status(204)
             .build()
