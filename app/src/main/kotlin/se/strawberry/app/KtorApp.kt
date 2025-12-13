@@ -90,7 +90,7 @@ fun Application.mockGateway() {
             get("/{id}") {
                 val id = call.parameters["id"]
                 if (id.isNullOrBlank()) {
-                    call.respondNotFound("missing_id")
+                    call.respondBadRequest("missing_id")
                 } else {
                     val resp: WMResponse = dependencies.requestService.byId(id)
                     respondFromWireMock(call, resp)
@@ -137,7 +137,7 @@ fun Application.mockGateway() {
                 val id = call.parameters["id"]
                 val s = id?.let { dependencies.sessionRepository.get(it) }
                 if (s == null) {
-                    call.respondBadRequest(reason = "not_found", message = "Session not found")
+                    call.respondNotFound(reason = "not_found", message = "Session not found")
                 } else {
                     val payload = Json.mapper.writeValueAsString(
                         mapOf(
