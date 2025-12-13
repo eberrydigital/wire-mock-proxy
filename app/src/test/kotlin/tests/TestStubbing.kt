@@ -7,6 +7,7 @@ import org.hamcrest.Matchers.equalTo
 import org.junit.jupiter.api.Test
 import se.strawberry.domain.stub.Ephemeral
 import stubs.Stubs
+import tests.setup.BaseTest
 import kotlin.random.Random
 
 class TestStubbingOnlyWorksWithinTheSameSession : BaseTest() {
@@ -28,7 +29,7 @@ class TestStubbingOnlyWorksWithinTheSameSession : BaseTest() {
                 )
         )
 
-        val stub = Stubs.getExactStaticText(
+        val stub = Stubs.createStubRequest(
             url = endpoint,
             status = stubStatus,
             bodyText = stubBody,

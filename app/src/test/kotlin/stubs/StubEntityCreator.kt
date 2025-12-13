@@ -4,7 +4,7 @@ import se.strawberry.domain.stub.*
 
 object Stubs {
 
-    fun getExactStaticText(
+    fun createStubRequest(
         url: String,
         status: Int = 200,
         bodyText: String = "ok",

@@ -1,4 +1,4 @@
-package tests
+package tests.setup
 
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.common.Slf4jNotifier
@@ -7,6 +7,7 @@ import io.ktor.server.engine.EmbeddedServer
 import io.ktor.server.netty.NettyApplicationEngine
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.Response
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
@@ -94,7 +95,7 @@ abstract class BaseTest {
     }
 
 
-    fun call(sessionId: String?, endpoint: String): okhttp3.Response {
+    fun call(sessionId: String?, endpoint: String): Response {
         val req = Request.Builder()
             .url("${proxyBaseUrl()}$endpoint")
             .addHeader("X-Mock-Target-Service", upstreamServiceName)
