@@ -73,7 +73,7 @@ abstract class BaseTest {
 
         // Start Ktor API
         val cfg = AppConfigLoader.load()
-        val deps = buildDependencies()
+        val deps = buildDependencies(cfg)
         ktorApp = KtorBootstrap.start(cfg, deps)
     }
 

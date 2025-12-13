@@ -4,26 +4,19 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.http.HttpHeader
 import com.github.tomakehurst.wiremock.http.HttpHeaders
 import com.github.tomakehurst.wiremock.http.Response
+import helpers.DependencyHelper.buildFakeDependency
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import se.strawberry.app.AppDependencies
 import se.strawberry.app.DependenciesKey
-import se.strawberry.app.buildDependencies
 import se.strawberry.app.mockGateway
 import se.strawberry.common.Headers
 import se.strawberry.common.Json
-import se.strawberry.domain.stub.CreateStubRequest
-import se.strawberry.domain.stub.Ephemeral
-import se.strawberry.domain.stub.ReqMatch
-import se.strawberry.domain.stub.ReqMatchMethods
-import se.strawberry.domain.stub.RespDef
-import se.strawberry.domain.stub.RespMode
-import se.strawberry.domain.stub.UrlMatch
-import se.strawberry.domain.stub.UrlMatchType
+import se.strawberry.domain.stub.*
 import se.strawberry.service.stub.StubService
 
 class StubsRoutesTest {
@@ -34,9 +27,8 @@ class StubsRoutesTest {
     fun `POST _proxy-api_stubs - missing session header returns 400`() = testApplication {
         // Arrange
         val fakeStubService = RecordingStubService(mapper)
-        val deps = buildFakeDeps(mapper, fakeStubService)
         application {
-            attributes.put(DependenciesKey, deps)
+            attributes.put(DependenciesKey, buildFakeDependency().copy(mapper = mapper, stubService = fakeStubService))
             mockGateway()
         }
 
@@ -58,9 +50,8 @@ class StubsRoutesTest {
     fun `POST _proxy-api_stubs - valid request returns 201 and calls StubService`() = testApplication {
         // Arrange
         val fakeStubService = RecordingStubService(mapper)
-        val deps = buildFakeDeps(mapper, fakeStubService)
         application {
-            attributes.put(DependenciesKey, deps)
+            attributes.put(DependenciesKey, buildFakeDependency().copy(mapper = mapper, stubService = fakeStubService))
             mockGateway()
         }
 
@@ -91,9 +82,8 @@ class StubsRoutesTest {
         val fakeStubService = RecordingStubService(mapper).apply {
             listResponseBody = """[{"id":"1"},{"id":"2"}]"""
         }
-        val deps = buildFakeDeps(mapper, fakeStubService)
         application {
-            attributes.put(DependenciesKey, deps)
+            attributes.put(DependenciesKey, buildFakeDependency().copy(mapper = mapper, stubService = fakeStubService))
             mockGateway()
         }
 
@@ -109,9 +99,8 @@ class StubsRoutesTest {
     @Test
     fun `POST _proxy-api_stubs - invalid json returns 400`() = testApplication {
         val fakeStubService = RecordingStubService(mapper)
-        val deps = buildFakeDeps(mapper, fakeStubService)
         application {
-            attributes.put(DependenciesKey, deps)
+            attributes.put(DependenciesKey, buildFakeDependency().copy(mapper = mapper, stubService = fakeStubService))
             mockGateway()
         }
 
@@ -129,9 +118,8 @@ class StubsRoutesTest {
     @Test
     fun `DELETE _proxy-api_stubs - missing id returns 400`() = testApplication {
         val fakeStubService = RecordingStubService(mapper)
-        val deps = buildFakeDeps(mapper, fakeStubService)
         application {
-            attributes.put(DependenciesKey, deps)
+            attributes.put(DependenciesKey, buildFakeDependency().copy(mapper = mapper, stubService = fakeStubService))
             mockGateway()
         }
 
@@ -143,9 +131,8 @@ class StubsRoutesTest {
     @Test
     fun `DELETE _proxy-api_stubs - valid id returns 204 and calls service`() = testApplication {
         val fakeStubService = RecordingStubService(mapper)
-        val deps = buildFakeDeps(mapper, fakeStubService)
         application {
-            attributes.put(DependenciesKey, deps)
+            attributes.put(DependenciesKey, buildFakeDependency().copy(mapper = mapper, stubService = fakeStubService))
             mockGateway()
         }
 
@@ -180,9 +167,6 @@ class StubsRoutesTest {
     private fun validCreateStubJson(): String =
         mapper.writeValueAsString(validCreateStubRequest())
 
-    private fun buildFakeDeps(mapper: ObjectMapper, stubService: StubService): AppDependencies {
-        return buildDependencies().copy(mapper = mapper, stubService = stubService)
-    }
 
     private class RecordingStubService(private val mapper: ObjectMapper) : StubService {
         data class CreateCall(val dto: CreateStubRequest, val sessionId: String)

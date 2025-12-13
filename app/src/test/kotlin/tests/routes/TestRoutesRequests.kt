@@ -4,15 +4,15 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.http.HttpHeader
 import com.github.tomakehurst.wiremock.http.HttpHeaders
 import com.github.tomakehurst.wiremock.http.Response
+import helpers.DependencyHelper.buildFakeDependency
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.testing.*
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import se.strawberry.app.AppDependencies
 import se.strawberry.app.DependenciesKey
-import se.strawberry.app.buildDependencies
 import se.strawberry.app.mockGateway
 import se.strawberry.common.Headers
 import se.strawberry.common.Json
@@ -27,9 +27,8 @@ class RequestsRoutesTest {
         val fake = RecordingRequestService().apply {
             listBody = """[{"id":"1"}]"""
         }
-        val deps = buildFakeDeps(fake)
         application {
-            attributes.put(DependenciesKey, deps)
+            attributes.put(DependenciesKey, buildFakeDependency().copy(mapper = mapper, requestService = fake))
             mockGateway()
         }
 
@@ -47,9 +46,8 @@ class RequestsRoutesTest {
     @Test
     fun `GET _proxy-api_requests by id - blank id returns 400`() = testApplication {
         val fake = RecordingRequestService()
-        val deps = buildFakeDeps(fake)
         application {
-            attributes.put(DependenciesKey, deps)
+            attributes.put(DependenciesKey, buildFakeDependency().copy(mapper = mapper, requestService = fake))
             mockGateway()
         }
 
@@ -62,11 +60,6 @@ class RequestsRoutesTest {
     }
 
     // --- helpers ---
-
-    private fun buildFakeDeps(requestService: RequestService): AppDependencies {
-        // relies on buildDependencies().copy(...) existing in your code
-        return buildDependencies().copy(mapper = mapper, requestService = requestService)
-    }
 
     private class RecordingRequestService : RequestService {
         var listBody: String = "[]"
