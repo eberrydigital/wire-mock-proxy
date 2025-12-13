@@ -21,7 +21,6 @@ import se.strawberry.wiremock.filters.DynamicRoutingGuard
 import se.strawberry.wiremock.listeners.EphemeralServeEventListener
 import se.strawberry.wiremock.matchers.TtlGuardMatcher
 import se.strawberry.wiremock.templating.ServiceTemplateHelpers
-import se.strawberry.wiremock.transformers.UpstreamPatchTransformer
 
 
 object ServerBootstrap {
@@ -51,7 +50,6 @@ object ServerBootstrap {
                 .extensions(
                     DynamicRoutingGuard(cfg.services, cfg.allowedPorts),
                     TtlGuardMatcher(),
-                    UpstreamPatchTransformer(mapper),
                     RequestsApiTransformer(),
                     EphemeralServeEventListener(),
                     ServiceTemplateHelpers(cfg.services)

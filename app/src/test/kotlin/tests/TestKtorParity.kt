@@ -15,6 +15,8 @@ import org.hamcrest.Matchers.equalTo
 import org.junit.jupiter.api.Test
 import se.strawberry.app.mockGateway
 import se.strawberry.admin.ServerRef
+import se.strawberry.app.DependenciesKey
+import se.strawberry.app.buildDependencies
 import se.strawberry.common.Json
 import se.strawberry.domain.stub.*
 import se.strawberry.stubs.dto.StubBuilder
@@ -24,7 +26,10 @@ class TestKtorParity : BaseTest() {
 
     @Test
     fun health_should_return_ok() = testApplication {
-        application { mockGateway() }
+        application {
+            attributes.put(DependenciesKey, buildDependencies())
+            mockGateway()
+        }
         val resp = client.get("/_proxy-api/health")
         assertThat(resp.status, equalTo(HttpStatusCode.OK))
         assertThat(resp.bodyAsText(), containsString("\"ok\""))
@@ -32,7 +37,10 @@ class TestKtorParity : BaseTest() {
 
     @Test
     fun stubs_list_should_reflect_server_state() = testApplication {
-        application { mockGateway() }
+        application {
+            attributes.put(DependenciesKey, buildDependencies())
+            mockGateway()
+        }
         // Arrange: add a stub directly to ServerRef
         val dto = CreateStubRequest(
             request = ReqMatch(
@@ -61,7 +69,10 @@ class TestKtorParity : BaseTest() {
 
     @Test
     fun requests_list_should_match_recorded_events() = testApplication {
-        application { mockGateway() }
+        application {
+            attributes.put(DependenciesKey, buildDependencies())
+            mockGateway()
+        }
         val endpoint = "/api/parity"
         val sessionId = Random.nextInt().toString()
 
@@ -87,7 +98,10 @@ class TestKtorParity : BaseTest() {
 
     @Test
     fun create_stub_via_ktor_should_mirror_wiremock_api_behavior() = testApplication {
-        application { mockGateway() }
+        application {
+            attributes.put(DependenciesKey, buildDependencies())
+            mockGateway()
+        }
         val endpoint = "/api/ktor-create"
         val sessionId = Random.nextInt().toString()
 
