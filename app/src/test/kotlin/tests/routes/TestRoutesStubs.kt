@@ -1,4 +1,4 @@
-package tests.routes.stubs
+package tests.routes
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.http.HttpHeader
