@@ -17,7 +17,7 @@ object ProxyApi {
      */
     fun createStub(
         client: OkHttpClient,
-        proxyBaseUrl: String,
+        apiBaseUrl: String,
         targetService: String,
         stub: CreateStubRequest,
         sessionId: String? = null
@@ -25,7 +25,7 @@ object ProxyApi {
         val body = Json.mapper.writeValueAsString(stub).toRequestBody(JSON)
 
         val req = Request.Builder()
-            .url("$proxyBaseUrl/_proxy-api/stubs")
+            .url("$apiBaseUrl/_proxy-api/stubs")
             .addHeader("Content-Type", "application/json")
             .addHeader("X-Mock-Target-Service", targetService)
             .apply { if (sessionId != null) addHeader("X-Mock-Session-Id", sessionId) }

@@ -41,7 +41,7 @@ class TestEphemeralStubbing : BaseTest() {
 
         ProxyApi.createStub(
             client = http,
-            proxyBaseUrl = proxyBaseUrl(),
+            apiBaseUrl = apiBaseUrl(),
             targetService = upstreamServiceName,
             stub = stub,
             sessionId = sessionId
@@ -84,7 +84,7 @@ class TestEphemeralStubbing : BaseTest() {
 
         ProxyApi.createStub(
             client = http,
-            proxyBaseUrl = proxyBaseUrl(),
+            apiBaseUrl = apiBaseUrl(),
             targetService = upstreamServiceName,
             stub = stub,
             sessionId = sessionId
@@ -121,7 +121,7 @@ class TestEphemeralStubbing : BaseTest() {
 
        ProxyApi.createStub(
             client = http,
-            proxyBaseUrl = proxyBaseUrl(),
+            apiBaseUrl = apiBaseUrl(),
             targetService = upstreamServiceName,
             stub = stub,
             sessionId = sessionId
@@ -163,7 +163,7 @@ class TestEphemeralStubbing : BaseTest() {
 
         ProxyApi.createStub(
             client = http,
-            proxyBaseUrl = proxyBaseUrl(),
+            apiBaseUrl = apiBaseUrl(),
             targetService = upstreamServiceName,
             stub = stub,
             sessionId = sessionId
@@ -206,9 +206,9 @@ class TestEphemeralStubbing : BaseTest() {
             ephemeral = Ephemeral(uses = uses, ttlMs = ttl)
         )
 
-        ProxyApi.createStub(
+      ProxyApi.createStub(
             client = http,
-            proxyBaseUrl = proxyBaseUrl(),
+            apiBaseUrl = apiBaseUrl(),
             targetService = upstreamServiceName,
             stub = stub,
             sessionId = sessionId

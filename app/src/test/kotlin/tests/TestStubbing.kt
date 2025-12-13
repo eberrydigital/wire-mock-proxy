@@ -37,7 +37,7 @@ class TestStubbingOnlyWorksWithinTheSameSession : BaseTest() {
 
         val createResp = ProxyApi.createStub(
             client = http,
-            proxyBaseUrl = proxyBaseUrl(),
+            apiBaseUrl = apiBaseUrl(),
             targetService = upstreamServiceName,
             stub = stub,
             sessionId = sessionId

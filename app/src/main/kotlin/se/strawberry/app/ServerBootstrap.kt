@@ -50,7 +50,6 @@ object ServerBootstrap {
                 .extensions(
                     DynamicRoutingGuard(cfg.services, cfg.allowedPorts),
                     TtlGuardMatcher(),
-                    RequestsApiTransformer(),
                     EphemeralServeEventListener(),
                     ServiceTemplateHelpers(cfg.services)
                 )
@@ -63,14 +62,6 @@ object ServerBootstrap {
 
         // Ui Files
         registerRulesForFrontendRequests(server)
-
-        server.stubFor(
-            any(urlPathMatching("$API_PREFIX/.*")).atPriority(UI)
-                .willReturn(
-                    aResponse()
-                        .withTransformers(TransformerNames.REQUESTS_API)
-                )
-        )
 
         server.stubFor(
             any(urlMatching(".*")).atPriority(PROXY_FALLBACK)
