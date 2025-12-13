@@ -11,6 +11,9 @@ object AppConfigLoader {
         val port = Env.int("PORT", 8080)!!
         require(port in 1..65535) { "PORT must be in 1..65535" }
 
+        val apiPort = Env.int("API_PORT", 8081)!!
+        require(apiPort in 1..65535 && apiPort != port) { "PORT must be in 1..65535" }
+
         val bindAddress = Env.str("BIND_ADDRESS", "0.0.0.0")!!
 
         val filesSource = Env.str("WIREMOCK_FILES_DIR")?.let {
@@ -29,6 +32,7 @@ object AppConfigLoader {
 
         val cfg = AppConfig(
             port = port,
+            apiPort = apiPort,
             bindAddress = bindAddress,
             filesSource = filesSource,
             allowedPorts = allowedPorts,

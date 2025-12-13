@@ -5,6 +5,7 @@ import java.net.URI
 
 data class AppConfig(
     val port: Int,
+    val apiPort: Int,
     val bindAddress: String,
     val filesSource: FilesSource,
     val allowedPorts: Set<Int>,
