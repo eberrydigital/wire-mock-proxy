@@ -17,6 +17,7 @@ import se.strawberry.app.mockGateway
 import se.strawberry.admin.ServerRef
 import se.strawberry.app.DependenciesKey
 import se.strawberry.app.buildDependencies
+import se.strawberry.app.installDependencies
 import se.strawberry.common.Json
 import se.strawberry.domain.stub.*
 import se.strawberry.stubs.dto.StubBuilder
@@ -28,6 +29,7 @@ class TestKtorParity : BaseTest() {
     fun health_should_return_ok() = testApplication {
         application {
             attributes.put(DependenciesKey, buildDependencies())
+            installDependencies()
             mockGateway()
         }
         val resp = client.get("/_proxy-api/health")
@@ -39,6 +41,7 @@ class TestKtorParity : BaseTest() {
     fun stubs_list_should_reflect_server_state() = testApplication {
         application {
             attributes.put(DependenciesKey, buildDependencies())
+            installDependencies()
             mockGateway()
         }
         // Arrange: add a stub directly to ServerRef
@@ -71,6 +74,7 @@ class TestKtorParity : BaseTest() {
     fun requests_list_should_match_recorded_events() = testApplication {
         application {
             attributes.put(DependenciesKey, buildDependencies())
+            installDependencies()
             mockGateway()
         }
         val endpoint = "/api/parity"
@@ -100,6 +104,7 @@ class TestKtorParity : BaseTest() {
     fun create_stub_via_ktor_should_mirror_wiremock_api_behavior() = testApplication {
         application {
             attributes.put(DependenciesKey, buildDependencies())
+            installDependencies()
             mockGateway()
         }
         val endpoint = "/api/ktor-create"

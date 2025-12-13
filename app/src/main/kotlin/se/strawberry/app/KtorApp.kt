@@ -10,7 +10,6 @@ import io.ktor.util.*
 import se.strawberry.common.Headers
 import se.strawberry.common.Json
 import se.strawberry.domain.stub.CreateStubRequest
-import se.strawberry.repository.session.InMemorySessionRepository
 import se.strawberry.repository.session.SessionRepository
 import java.util.*
 import com.github.tomakehurst.wiremock.http.Response as WMResponse
@@ -91,7 +90,7 @@ fun Application.mockGateway() {
             get("/{id}") {
                 val id = call.parameters["id"]
                 if (id.isNullOrBlank()) {
-                    call.respondText("{\"error\":\"bad_request\"}", ContentType.Application.Json, HttpStatusCode.BadRequest)
+                    call.respondNotFound("missing_id")
                 } else {
                     val resp: WMResponse = dependencies.requestService.byId(id)
                     respondFromWireMock(call, resp)
@@ -109,7 +108,6 @@ fun Application.mockGateway() {
             }
         }
 
-        val sessionsRepo: SessionRepository = InMemorySessionRepository()
         route("/_proxy-api/sessions") {
             // Create session
             post {
@@ -123,7 +121,7 @@ fun Application.mockGateway() {
                     expiresAt = null,
                     status = SessionRepository.Session.Status.ACTIVE
                 )
-                sessionsRepo.create(s)
+                dependencies.sessionRepository.create(s)
                 val payload = Json.mapper.writeValueAsString(
                     mapOf(
                         "id" to s.id,
@@ -137,9 +135,9 @@ fun Application.mockGateway() {
             // Get session by id
             get("/{id}") {
                 val id = call.parameters["id"]
-                val s = id?.let { sessionsRepo.get(it) }
+                val s = id?.let { dependencies.sessionRepository.get(it) }
                 if (s == null) {
-                    call.respondText("{\"error\":\"not_found\"}", ContentType.Application.Json, HttpStatusCode.NotFound)
+                    call.respondBadRequest(reason = "not_found", message = "Session not found")
                 } else {
                     val payload = Json.mapper.writeValueAsString(
                         mapOf(
@@ -156,11 +154,11 @@ fun Application.mockGateway() {
             post("/{id}/close") {
                 val id = call.parameters["id"]
                 if (id.isNullOrBlank()) {
-                    call.respondText("{\"error\":\"bad_request\"}", ContentType.Application.Json, HttpStatusCode.BadRequest)
+                    call.respondBadRequest(reason = "bad_request", message = "Missing session id")
                 } else {
-                    val ok = sessionsRepo.close(id)
+                    val ok = dependencies.sessionRepository.close(id)
                     if (!ok) {
-                        call.respondText("{\"error\":\"not_found\"}", ContentType.Application.Json, HttpStatusCode.NotFound)
+                        call.respondBadRequest(reason = "not_found", message = "Session not found")
                     } else {
                         call.respond(HttpStatusCode.NoContent)
                     }
@@ -186,10 +184,26 @@ private suspend fun respondFromWireMock(call: ApplicationCall, wm: WMResponse) {
 private fun ApplicationCall.sessionIdOrNull(): String? =
     request.headers[Headers.X_MOCK_SESSION_ID]?.trim()?.takeIf { it.isNotEmpty() }
 
-private suspend fun ApplicationCall.respondBadRequest(reason: String) {
-    respondText(
-        """{"error":"bad_request","reason":"$reason"}""",
-        ContentType.Application.Json,
-        HttpStatusCode.BadRequest
-    )
+
+private suspend fun ApplicationCall.respondError(
+    status: HttpStatusCode,
+    error: String,
+    reason: String? = null,
+    message: String? = null
+) {
+    val payload = buildString {
+        append("""{"error":"$error"""")
+        if (reason != null) append(""","reason":"$reason"""")
+        if (message != null) append(""","message":"$message"""")
+        append("}")
+    }
+
+    respondText(payload, ContentType.Application.Json, status)
 }
+
+private suspend fun ApplicationCall.respondBadRequest(reason: String, message: String? = null) =
+    respondError(HttpStatusCode.BadRequest, error = "bad_request", reason = reason, message = message)
+
+private suspend fun ApplicationCall.respondNotFound(reason: String = "not_found", message: String? = null) =
+    respondError(HttpStatusCode.NotFound, error = "not_found", reason = reason, message = message)
+
