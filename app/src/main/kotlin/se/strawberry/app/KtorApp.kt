@@ -8,7 +8,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import se.strawberry.admin.ServerRef
 import se.strawberry.api.handlers.RequestsHandler
-import se.strawberry.api.handlers.SessionScope
+import se.strawberry.helpers.SessionHelper
 import se.strawberry.common.Headers
 import se.strawberry.common.Json
 import se.strawberry.common.MetadataKeys
@@ -42,7 +42,7 @@ fun Application.mockGateway() {
                 val mapper = Json.mapper
                 val dtoOriginal = mapper.readValue(body, CreateStubRequest::class.java)
                 val sessionId = call.request.headers[Headers.X_MOCK_SESSION_ID]?.trim()?.takeIf { it.isNotEmpty() }
-                val patchedDto = SessionScope.withSessionMatch(dtoOriginal, sessionId)
+                val patchedDto = SessionHelper.withSessionMatch(dtoOriginal, sessionId)
                 val stub = StubBuilder.buildStubMapping(patchedDto)
                 ServerRef.server.addStubMapping(stub)
 

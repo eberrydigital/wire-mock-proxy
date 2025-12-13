@@ -10,7 +10,7 @@ import se.strawberry.domain.stub.CreateStubRequest
  */
 interface StubService {
     /** Create a stub from request DTO; sessionId is optional for global vs session-scoped stubs. */
-    fun create(dto: CreateStubRequest, originalRequest: Request, sessionId: String?): Response
+    fun create(dto: CreateStubRequest, sessionId: String): Response
 
     /** List all stubs (thin wrapper around WireMock list). */
     fun list(): Response

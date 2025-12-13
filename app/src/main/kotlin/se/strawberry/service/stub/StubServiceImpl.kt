@@ -1,11 +1,14 @@
 package se.strawberry.service.stub
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.github.tomakehurst.wiremock.http.Request
+import com.github.tomakehurst.wiremock.http.HttpHeader
+import com.github.tomakehurst.wiremock.http.HttpHeaders
 import com.github.tomakehurst.wiremock.http.Response
-import se.strawberry.api.handlers.SessionScope
-import se.strawberry.api.handlers.StubsHandler
+import se.strawberry.helpers.SessionHelper
+import se.strawberry.common.Headers
+import se.strawberry.common.MetadataKeys
 import se.strawberry.domain.stub.CreateStubRequest
+import se.strawberry.service.wiremock.ServerWireMockClient
 import se.strawberry.stubs.dto.StubBuilder
 
 /**
@@ -13,20 +16,60 @@ import se.strawberry.stubs.dto.StubBuilder
  * No behavior changes.
  */
 class StubServiceImpl(
-    private val mapper: ObjectMapper
+    private val mapper: ObjectMapper,
+    private val wireMockClient: ServerWireMockClient
 ) : StubService {
-    private val handler = StubsHandler(mapper)
+    override fun create(dto: CreateStubRequest, sessionId: String): Response {
+        val patchedDto = SessionHelper.withSessionMatch(dto, sessionId)
+        val stub = StubBuilder.buildStubMapping(patchedDto)
+        wireMockClient.addStub(stub)
 
-    override fun create(dto: CreateStubRequest, originalRequest: Request, sessionId: String?): Response {
-        // Apply session scoping as handler would
-        val patched = SessionScope.withSessionMatch(dto, sessionId)
-        val stub = StubBuilder.buildStubMapping(patched)
-        // Delegate actual add + response payload building to handler
-        return handler.create(originalRequest)
+
+        val md = stub.metadata
+        val usesLeft: Int? = md?.let { (it[MetadataKeys.REMAINING_USES] as? Number)?.toInt() }
+        val expiresAt: Long? = md?.let { (it[MetadataKeys.EXPIRES_AT] as? Number)?.toLong() }
+
+        val payload = mapper.writeValueAsString(
+            mapOf(
+                "id" to stub.id,
+                "summary" to "${dto.request.method} ${dto.request.url.value}",
+                "usesLeft" to usesLeft,
+                MetadataKeys.EXPIRES_AT to expiresAt
+            )
+        )
+        return json(201, payload)
     }
 
-    override fun list(): Response = handler.list()
+    override fun list(): Response {
+        val list = wireMockClient.listStubs().map { sm ->
+            val md = sm.metadata
+            mapOf(
+                "id" to sm.id,
+                "priority" to sm.priority,
+                "request" to sm.request?.url,
+                "method" to sm.request?.method?.value(),
+                "usesLeft" to md?.let { (it[MetadataKeys.REMAINING_USES] as? Number)?.toInt() },
+                MetadataKeys.EXPIRES_AT to md?.let { (it[MetadataKeys.EXPIRES_AT] as? Number)?.toLong() }
+            )
+        }
+        return json(200, mapper.writeValueAsString(list))
+    }
 
-    override fun delete(id: String): Response = handler.delete(id)
+    override fun delete(id: String): Response {
+        val sm = wireMockClient.listStubs()
+            .firstOrNull { it.id.equals(id) }
+            ?: return json(404, """{"error":"not_found"}""")
+
+        wireMockClient.removeStub(sm)
+        return Response.response()
+            .status(204)
+            .build()
+    }
+
+    private fun json(code: Int, body: String): Response =
+        Response.response()
+            .status(code)
+            .headers(HttpHeaders(HttpHeader.httpHeader(Headers.CONTENT_TYPE, Headers.JSON)))
+            .body(body)
+            .build()
 }
-

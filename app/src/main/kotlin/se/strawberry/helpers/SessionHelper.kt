@@ -1,4 +1,4 @@
-package se.strawberry.api.handlers
+package se.strawberry.helpers
 
 import com.github.tomakehurst.wiremock.http.Request
 import se.strawberry.common.Headers
@@ -6,7 +6,7 @@ import se.strawberry.domain.stub.CreateStubRequest
 import se.strawberry.domain.stub.HeaderMatch
 import se.strawberry.domain.stub.HeaderMatchType
 
-object SessionScope {
+object SessionHelper {
 
     fun extractSessionId(req: Request): String? =
         req.getHeader(Headers.X_MOCK_SESSION_ID)?.trim()?.takeIf { it.isNotEmpty() }

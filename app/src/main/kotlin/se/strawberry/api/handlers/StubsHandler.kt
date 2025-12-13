@@ -10,6 +10,7 @@ import se.strawberry.admin.ServerRef
 import se.strawberry.common.Headers
 import se.strawberry.common.MetadataKeys
 import se.strawberry.domain.stub.CreateStubRequest
+import se.strawberry.helpers.SessionHelper
 import se.strawberry.stubs.dto.StubBuilder
 
 class StubsHandler(
@@ -17,8 +18,8 @@ class StubsHandler(
 ) {
     fun create(request: Request): Response {
         val dtoOriginal = mapper.readValue<CreateStubRequest>(request.bodyAsString)
-        val sessionId = SessionScope.extractSessionId(request)
-        val patchedDto = SessionScope.withSessionMatch(dtoOriginal, sessionId)
+        val sessionId = SessionHelper.extractSessionId(request)
+        val patchedDto = SessionHelper.withSessionMatch(dtoOriginal, sessionId)
         val stub = StubBuilder.buildStubMapping(patchedDto)
         ServerRef.server.addStubMapping(stub)
 
