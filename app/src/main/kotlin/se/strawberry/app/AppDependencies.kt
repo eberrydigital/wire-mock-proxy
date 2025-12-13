@@ -1,0 +1,31 @@
+package se.strawberry.app
+
+import com.fasterxml.jackson.databind.ObjectMapper
+import se.strawberry.common.Json
+import se.strawberry.service.stub.StubService
+import se.strawberry.service.stub.StubServiceImpl
+import se.strawberry.service.traffic.RequestService
+import se.strawberry.service.traffic.RequestServiceImpl
+import se.strawberry.service.wiremock.ServerWireMockClient
+import se.strawberry.service.wiremock.WireMockClient
+
+data class AppDependencies(
+    val mapper: ObjectMapper,
+    val wireMockClient: WireMockClient,
+    val stubService: StubService,
+    val requestService: RequestService
+)
+
+fun buildDependencies(): AppDependencies {
+    val mapper = Json.mapper
+    val wireMockClient: WireMockClient = ServerWireMockClient()
+    val stubService: StubService = StubServiceImpl(mapper, wireMockClient)
+    val requestService: RequestService = RequestServiceImpl(mapper, wireMockClient)
+
+    return AppDependencies(
+        mapper = mapper,
+        wireMockClient = wireMockClient,
+        stubService = stubService,
+        requestService = requestService
+    )
+}

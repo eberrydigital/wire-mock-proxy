@@ -8,7 +8,7 @@ import se.strawberry.helpers.SessionHelper
 import se.strawberry.common.Headers
 import se.strawberry.common.MetadataKeys
 import se.strawberry.domain.stub.CreateStubRequest
-import se.strawberry.service.wiremock.ServerWireMockClient
+import se.strawberry.service.wiremock.WireMockClient
 import se.strawberry.stubs.dto.StubBuilder
 
 /**
@@ -17,7 +17,7 @@ import se.strawberry.stubs.dto.StubBuilder
  */
 class StubServiceImpl(
     private val mapper: ObjectMapper,
-    private val wireMockClient: ServerWireMockClient
+    private val wireMockClient: WireMockClient
 ) : StubService {
     override fun create(dto: CreateStubRequest, sessionId: String): Response {
         val patchedDto = SessionHelper.withSessionMatch(dto, sessionId)
