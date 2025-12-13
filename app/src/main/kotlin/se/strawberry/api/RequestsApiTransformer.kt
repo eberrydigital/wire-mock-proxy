@@ -14,7 +14,7 @@ import se.strawberry.domain.stub.CreateStubRequest
 import se.strawberry.helpers.SessionHelper
 import se.strawberry.maintenance.EphemeralCleaner
 import se.strawberry.service.stub.StubServiceImpl
-import se.strawberry.service.traffic.RequestServiceImpl
+import se.strawberry.service.request.RequestServiceImpl
 import se.strawberry.service.wiremock.ServerWireMockClient
 
 class RequestsApiTransformer : ResponseTransformerV2 {

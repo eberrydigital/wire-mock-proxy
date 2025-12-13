@@ -1,4 +1,4 @@
-package se.strawberry.service.traffic
+package se.strawberry.service.request
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.http.HttpHeader
@@ -15,10 +15,6 @@ import se.strawberry.config.UiBlacklist.DEVTOOLS_WELL_KNOWN
 import se.strawberry.config.UiBlacklist.FAVICON
 import se.strawberry.service.wiremock.WireMockClient
 
-/**
- * R1.4: Thin adapter over existing RequestsHandler to fit the service boundary.
- * No behavior changes.
- */
 class RequestServiceImpl(
     private val mapper: ObjectMapper,
     private val wireMockClient: WireMockClient

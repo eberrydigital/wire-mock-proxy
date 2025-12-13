@@ -1,11 +1,7 @@
-package se.strawberry.service.traffic
+package se.strawberry.service.request
 
 import com.github.tomakehurst.wiremock.http.Response
 
-/**
- * Service boundary for recorded traffic (requests/responses).
- * R1.2: interface only; DB comes in R4.
- */
 interface RequestService {
     /** List recorded requests with optional filters. */
     fun list(query: Map<String, String>): Response

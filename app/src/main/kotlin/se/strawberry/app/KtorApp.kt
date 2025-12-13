@@ -7,7 +7,6 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.util.*
-import se.strawberry.api.handlers.RequestsHandler
 import se.strawberry.common.Headers
 import se.strawberry.common.Json
 import se.strawberry.domain.stub.CreateStubRequest
@@ -83,42 +82,33 @@ fun Application.mockGateway() {
         route("/_proxy-api/requests") {
             // List
             get {
-                val mapper = Json.mapper
-                val handler = RequestsHandler(mapper)
-                val qp = call.request.queryParameters
-                val query: Map<String, String> = qp.names().associateWith { name -> qp.getAll(name)?.lastOrNull() ?: "" }
-                val resp: WMResponse = handler.list(query)
+                val queryParameters = call.request.queryParameters
+                val query: Map<String, String> = queryParameters.names().associateWith { name -> queryParameters.getAll(name)?.lastOrNull() ?: "" }
+                val resp: WMResponse = dependencies.requestService.list(query)
                 respondFromWireMock(call, resp)
             }
             // Get by id
             get("/{id}") {
-                val mapper = Json.mapper
-                val handler = RequestsHandler(mapper)
                 val id = call.parameters["id"]
                 if (id.isNullOrBlank()) {
                     call.respondText("{\"error\":\"bad_request\"}", ContentType.Application.Json, HttpStatusCode.BadRequest)
                 } else {
-                    val resp: WMResponse = handler.byId(id)
+                    val resp: WMResponse = dependencies.requestService.byId(id)
                     respondFromWireMock(call, resp)
                 }
             }
             // Clear
             delete {
-                val mapper = Json.mapper
-                val handler = RequestsHandler(mapper)
-                val resp: WMResponse = handler.clear()
+                val resp: WMResponse = dependencies.requestService.clear()
                 respondFromWireMock(call, resp)
             }
             // Export NDJSON
             get("/export") {
-                val mapper = Json.mapper
-                val handler = RequestsHandler(mapper)
-                val resp: WMResponse = handler.export()
+                val resp: WMResponse = dependencies.requestService.export()
                 respondFromWireMock(call, resp)
             }
         }
 
-        // RK5: Sessions API
         val sessionsRepo: SessionRepository = InMemorySessionRepository()
         route("/_proxy-api/sessions") {
             // Create session

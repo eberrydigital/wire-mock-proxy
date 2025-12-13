@@ -4,17 +4,14 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.http.HttpHeader
 import com.github.tomakehurst.wiremock.http.HttpHeaders
 import com.github.tomakehurst.wiremock.http.Response
-import se.strawberry.helpers.SessionHelper
 import se.strawberry.common.Headers
 import se.strawberry.common.MetadataKeys
 import se.strawberry.domain.stub.CreateStubRequest
+import se.strawberry.helpers.SessionHelper
 import se.strawberry.service.wiremock.WireMockClient
 import se.strawberry.stubs.dto.StubBuilder
 
-/**
- * R1.4: Thin adapter over existing StubsHandler to fit the service boundary.
- * No behavior changes.
- */
+
 class StubServiceImpl(
     private val mapper: ObjectMapper,
     private val wireMockClient: WireMockClient

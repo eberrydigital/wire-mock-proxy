@@ -4,9 +4,7 @@ import com.github.tomakehurst.wiremock.stubbing.ServeEvent
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import se.strawberry.admin.ServerRef
 
-/**
- * R1.4: Adapter around the global WireMock ServerRef to satisfy WireMockClient boundary.
- */
+
 class ServerWireMockClient : WireMockClient {
     override fun addStub(stub: StubMapping) {
         ServerRef.server.addStubMapping(stub)
