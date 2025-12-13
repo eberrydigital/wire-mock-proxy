@@ -1,7 +1,7 @@
 package tests
 
 import annotations.DecisionTableId
-import api.ProxyApi
+import helpers.ProxyApi
 import com.github.tomakehurst.wiremock.client.WireMock.*
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo

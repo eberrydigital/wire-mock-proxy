@@ -1,12 +1,18 @@
-package api
+package helpers
 
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
+import se.strawberry.common.Headers.X_MOCK_SESSION_ID
+import se.strawberry.common.Headers.X_MOCK_TARGET_SERVICE
 import se.strawberry.common.Json
 import se.strawberry.domain.stub.CreateStubRequest
+
+/**
+ * Utility for executing _proxy-api calls
+ */
 
 object ProxyApi {
     private val JSON = "application/json; charset=utf-8".toMediaType()
@@ -27,8 +33,8 @@ object ProxyApi {
         val req = Request.Builder()
             .url("$apiBaseUrl/_proxy-api/stubs")
             .addHeader("Content-Type", "application/json")
-            .addHeader("X-Mock-Target-Service", targetService)
-            .apply { if (sessionId != null) addHeader("X-Mock-Session-Id", sessionId) }
+            .addHeader(X_MOCK_TARGET_SERVICE, targetService)
+            .apply { if (sessionId != null) addHeader(X_MOCK_SESSION_ID, sessionId) }
             .post(body)
             .build()
 
