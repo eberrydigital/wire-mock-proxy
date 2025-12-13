@@ -6,15 +6,12 @@ import com.github.tomakehurst.wiremock.client.WireMock.*
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import org.slf4j.LoggerFactory
 import se.strawberry.admin.ServerRef
-import se.strawberry.api.RequestsApiTransformer
 import se.strawberry.common.Headers.X_MOCK_TARGET_SERVICE
 import se.strawberry.common.Json
-import se.strawberry.common.Paths.API_PREFIX
 import se.strawberry.common.Paths.UI_ASSETS_PREFIX
 import se.strawberry.common.Paths.UI_ROOT
 import se.strawberry.common.Priorities.PROXY_FALLBACK
 import se.strawberry.common.Priorities.UI
-import se.strawberry.common.TransformerNames
 import se.strawberry.config.AppConfig
 import se.strawberry.config.AppConfigLoader
 import se.strawberry.wiremock.filters.DynamicRoutingGuard
