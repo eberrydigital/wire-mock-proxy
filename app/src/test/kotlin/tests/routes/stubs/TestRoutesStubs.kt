@@ -106,6 +106,56 @@ class StubsRoutesTest {
         assertEquals(1, fakeStubService.listCalls)
     }
 
+    @Test
+    fun `POST _proxy-api_stubs - invalid json returns 400`() = testApplication {
+        val fakeStubService = RecordingStubService(mapper)
+        val deps = buildFakeDeps(mapper, fakeStubService)
+        application {
+            attributes.put(DependenciesKey, deps)
+            mockGateway()
+        }
+
+        val resp = client.post("/_proxy-api/stubs") {
+            contentType(ContentType.Application.Json)
+            header(Headers.X_MOCK_SESSION_ID, "s-1")
+            setBody("{not-valid-json}")
+        }
+
+        assertEquals(HttpStatusCode.BadRequest, resp.status)
+        assertTrue(resp.bodyAsText().contains("invalid_json"))
+        assertEquals(0, fakeStubService.createCalls.size)
+    }
+
+    @Test
+    fun `DELETE _proxy-api_stubs - missing id returns 400`() = testApplication {
+        val fakeStubService = RecordingStubService(mapper)
+        val deps = buildFakeDeps(mapper, fakeStubService)
+        application {
+            attributes.put(DependenciesKey, deps)
+            mockGateway()
+        }
+
+        val resp = client.delete("/_proxy-api/stubs/")
+
+        assertEquals(HttpStatusCode.NotFound, resp.status)
+    }
+
+    @Test
+    fun `DELETE _proxy-api_stubs - valid id returns 204 and calls service`() = testApplication {
+        val fakeStubService = RecordingStubService(mapper)
+        val deps = buildFakeDeps(mapper, fakeStubService)
+        application {
+            attributes.put(DependenciesKey, deps)
+            mockGateway()
+        }
+
+        val resp = client.delete("/_proxy-api/stubs/stub-1")
+
+        assertEquals(HttpStatusCode.NoContent, resp.status)
+        assertEquals(listOf("stub-1"), fakeStubService.deleteCalls)
+    }
+
+
     // --- helpers ---
 
     private fun validCreateStubRequest(): CreateStubRequest =
