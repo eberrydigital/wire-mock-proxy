@@ -1,6 +1,5 @@
 package se.strawberry.service.stub
 
-import com.github.tomakehurst.wiremock.http.Request
 import com.github.tomakehurst.wiremock.http.Response
 import se.strawberry.domain.stub.CreateStubRequest
 

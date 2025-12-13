@@ -1,4 +1,4 @@
-package se.strawberry.api.handlers
+package se.strawberry.service.traffic
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.http.HttpHeader
@@ -6,7 +6,6 @@ import com.github.tomakehurst.wiremock.http.HttpHeaders
 import com.github.tomakehurst.wiremock.http.Request
 import com.github.tomakehurst.wiremock.http.Response
 import com.github.tomakehurst.wiremock.stubbing.ServeEvent
-import se.strawberry.admin.ServerRef
 import se.strawberry.common.Headers
 import se.strawberry.common.Paths.ADMIN_PREFIX
 import se.strawberry.common.Paths.API_PREFIX
@@ -14,11 +13,18 @@ import se.strawberry.common.Paths.UI_ASSETS_PREFIX
 import se.strawberry.common.Paths.UI_ROOT
 import se.strawberry.config.UiBlacklist.DEVTOOLS_WELL_KNOWN
 import se.strawberry.config.UiBlacklist.FAVICON
+import se.strawberry.service.wiremock.WireMockClient
 
-class RequestsHandler(
-    private val mapper: ObjectMapper
-) {
-    fun list(query: Map<String, String>): Response {
+/**
+ * R1.4: Thin adapter over existing RequestsHandler to fit the service boundary.
+ * No behavior changes.
+ */
+class RequestServiceImpl(
+    private val mapper: ObjectMapper,
+    private val wireMockClient: WireMockClient
+) : RequestService {
+
+    override fun list(query: Map<String, String>): Response {
         val method = query["method"]?.uppercase()
         val pathSub = query["path"]
         val statusFilter = query["status"]?.toIntOrNull()
@@ -29,11 +35,9 @@ class RequestsHandler(
         }
         val sessionId = query["sessionId"]?.trim()?.takeIf { it.isNotEmpty() }
 
-        val all = ServerRef.server.allServeEvents
-
-        val events = all.asSequence()
+        val events = wireMockClient.listServeEvents().asSequence()
             .sortedByDescending { it.request.loggedDate }
-            .filter { ev -> showInternal || !shouldBeHiddenFromUI(ev.request.url) }
+            .filter { event -> showInternal || !shouldBeHiddenFromUI(event.request.url) }
             .filter { method == null || it.request.method.value().equals(method, true) }
             .filter { pathSub == null || it.request.url.contains(pathSub, ignoreCase = true) }
             .filter { statusFilter == null || it.response.status == statusFilter }
@@ -42,12 +46,11 @@ class RequestsHandler(
             .map { toDto(it) }
             .toList()
 
-        val json = mapper.writeValueAsString(events)
-        return json(200, json)
+        return json(200, mapper.writeValueAsString(events))
     }
 
-    fun byId(id: String): Response {
-        val ev = ServerRef.server.allServeEvents.find { it.id.toString() == id }
+    override fun byId(id: String): Response {
+        val ev = wireMockClient.findServeEvent(id)
             ?: return json(404, """{"error":"not_found"}""")
 
         if (shouldBeHiddenFromUI(ev.request.url)) {
@@ -58,14 +61,14 @@ class RequestsHandler(
         return json(200, json)
     }
 
-    fun clear(): Response {
-        ServerRef.server.resetRequests()
+    override fun clear(): Response {
+        wireMockClient.resetRequests()
         return Response.response().status(204).build()
     }
 
-    fun export(): Response {
+    override fun export(): Response {
         val sb = StringBuilder()
-        ServerRef.server.allServeEvents
+        wireMockClient.listServeEvents()
             .sortedBy { it.request.loggedDate }
             .forEach {
                 sb.append(mapper.writeValueAsString(toDto(it, includeBodies = true))).append('\n')
@@ -82,7 +85,6 @@ class RequestsHandler(
             .body(sb.toString())
             .build()
     }
-
 
     private fun toDto(ev: ServeEvent, includeBodies: Boolean = false): Map<String, Any?> {
         val req = ev.request
@@ -160,3 +162,7 @@ class RequestsHandler(
             .body(body)
             .build()
 }
+
+
+
+
