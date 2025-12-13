@@ -15,6 +15,16 @@ services:
       timeout: 3s
       retries: 20
 
+  dynamodb_admin:
+    image: aaronshaf/dynamodb-admin:latest
+    container_name: wmp-dynamodb-admin
+    environment:
+      - DYNAMO_ENDPOINT=http://dynamodb:8000
+    ports:
+      - "8001:8001"
+    depends_on:
+      - dynamodb
+
   wiremock:
     image: wiremock/wiremock:3.9.1
     container_name: wmp-wiremock
