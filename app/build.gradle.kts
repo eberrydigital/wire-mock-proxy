@@ -78,9 +78,15 @@ kotlin {
     }
 }
 
+// Use default test task; no separate unit/integration separation is needed.
 tasks.named<Test>("test") {
     jvmArgs("-XX:+EnableDynamicAgentLoading")
     jvmArgs("-Xshare:off")
     // Use JUnit Platform for unit tests.
     useJUnitPlatform()
+}
+
+// Ensure :app:check runs the default tests
+tasks.named("check") {
+    dependsOn(tasks.named("test"))
 }

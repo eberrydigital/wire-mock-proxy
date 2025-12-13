@@ -1,0 +1,34 @@
+version: "3.9"
+
+services:
+  dynamodb:
+    image: amazon/dynamodb-local:1.24.0
+    container_name: wmp-dynamodb-local
+    ports:
+      - "8000:8000"
+    command: ["-jar", "DynamoDBLocal.jar", "-sharedDb"]
+    volumes:
+      - dynamodb_data:/home/dynamodblocal/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/shell/"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  wiremock:
+    image: wiremock/wiremock:3.9.1
+    container_name: wmp-wiremock
+    ports:
+      - "8080:8080"
+    environment:
+      - WIREMOCK_PORT=8080
+    command: ["--verbose"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/__admin/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  dynamodb_data:
+
