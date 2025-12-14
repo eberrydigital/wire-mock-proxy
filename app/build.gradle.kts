@@ -63,6 +63,9 @@ dependencies {
 
     implementation("software.amazon.awssdk:dynamodb:2.27.18")
     implementation("software.amazon.awssdk:auth:2.27.18")
+
+    // .env file support
+    implementation("io.github.cdimascio:dotenv-kotlin:6.4.2")
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
