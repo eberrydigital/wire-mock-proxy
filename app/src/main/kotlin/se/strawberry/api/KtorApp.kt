@@ -197,25 +197,3 @@ private fun ApplicationCall.sessionIdOrNull(): String? =
     request.headers[Headers.X_MOCK_SESSION_ID]?.trim()?.takeIf { it.isNotEmpty() }
 
 
-private suspend fun ApplicationCall.respondError(
-    status: HttpStatusCode,
-    error: String,
-    reason: String? = null,
-    message: String? = null
-) {
-    val payload = buildString {
-        append("""{"error":"$error"""")
-        if (reason != null) append(""","reason":"$reason"""")
-        if (message != null) append(""","message":"$message"""")
-        append("}")
-    }
-
-    respondText(payload, ContentType.Application.Json, status)
-}
-
-private suspend fun ApplicationCall.respondBadRequest(reason: String, message: String? = null) =
-    respondError(HttpStatusCode.BadRequest, error = "bad_request", reason = reason, message = message)
-
-private suspend fun ApplicationCall.respondNotFound(reason: String = "not_found", message: String? = null) =
-    respondError(HttpStatusCode.NotFound, error = "not_found", reason = reason, message = message)
-
