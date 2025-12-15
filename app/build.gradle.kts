@@ -44,6 +44,11 @@ dependencies {
     testImplementation(kotlin("test"))
     testImplementation("io.mockk:mockk:1.14.7")
 
+    // Testcontainers for integration tests
+    testImplementation("org.testcontainers:testcontainers:1.19.3")
+    testImplementation("org.testcontainers:junit-jupiter:1.19.3")
+    testImplementation("org.testcontainers:localstack:1.19.3")
+
     testRuntimeOnly("ch.qos.logback:logback-classic:1.5.+")
     testRuntimeOnly("org.slf4j:jul-to-slf4j:2.0.+")
 

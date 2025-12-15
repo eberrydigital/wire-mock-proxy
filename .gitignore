@@ -11,3 +11,5 @@
 build
 
 prompts
+
+.env

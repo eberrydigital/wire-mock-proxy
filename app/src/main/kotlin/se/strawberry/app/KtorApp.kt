@@ -152,12 +152,19 @@ fun Application.mockGateway() {
                 }
             }
             // Close session
-            post("/{id}/close") {
-                val id = call.parameters["id"]
-                if (id.isNullOrBlank()) {
+            patch("/close") {
+                val body = call.receiveText()
+                val mapper = dependencies.mapper
+                val dto = try {
+                    mapper.readValue(body, SessionCloseRequestModel::class.java)
+                } catch (_: Exception) {
+                    call.respondBadRequest("invalid_json")
+                    return@patch
+                }
+                if (dto.id.isBlank()) {
                     call.respondBadRequest(reason = "bad_request", message = "Missing session id")
                 } else {
-                    val ok = dependencies.sessionRepository.close(id)
+                    val ok = dependencies.sessionRepository.close(dto.id)
                     if (!ok) {
                         call.respondBadRequest(reason = "not_found", message = "Session not found")
                     } else {

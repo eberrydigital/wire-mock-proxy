@@ -112,5 +112,3 @@ abstract class BaseTest {
         }
     }
 }
-
-private fun freePort(): Int = ServerSocket(0).use { it.localPort }
