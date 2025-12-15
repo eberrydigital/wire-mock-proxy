@@ -26,7 +26,6 @@ import se.strawberry.common.Json
 import se.strawberry.common.MatcherNames
 import se.strawberry.common.MetadataKeys
 import se.strawberry.common.TemplateNames
-import se.strawberry.common.TransformerNames
 import se.strawberry.domain.stub.BodyMatchMode
 import se.strawberry.domain.stub.BodyMatcherType
 import se.strawberry.domain.stub.CreateStubRequest
@@ -109,7 +108,6 @@ object StubBuilder {
 
             RespMode.PATCH_UPSTREAM -> {
                 rb.proxiedFrom("{{${TemplateNames.SERVICE_ORIGIN} name=request.headers.[$X_MOCK_TARGET_SERVICE]}}")
-                rb.withTransformers(TransformerNames.UPSTREAM_PATCH)
                 rb.withTransformerParameter("patch", mapper.valueToTree(dto.response.patch))
             }
         }

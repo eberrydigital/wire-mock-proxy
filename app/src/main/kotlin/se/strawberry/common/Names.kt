@@ -17,11 +17,6 @@ object TemplateNames {
     const val SERVICE_TEMPLATE_HELPERS = "service-template-helpers"
 }
 
-object TransformerNames {
-    const val REQUESTS_API = "requests-api"
-    const val UPSTREAM_PATCH = "upstream-patch"
-}
-
 object Paths {
     const val ADMIN_PREFIX = "/__admin"
     const val UI_ROOT = "/_proxy-ui"
@@ -39,7 +34,6 @@ object Headers {
 
 object Priorities {
     const val UI = 1
-    const val DEFAULT_STUB = 2
     const val PROXY_FALLBACK = 1000
 }
 
