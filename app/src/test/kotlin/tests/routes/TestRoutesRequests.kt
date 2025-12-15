@@ -1,9 +1,6 @@
 package tests.routes
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.github.tomakehurst.wiremock.http.HttpHeader
-import com.github.tomakehurst.wiremock.http.HttpHeaders
-import com.github.tomakehurst.wiremock.http.Response
 import helpers.DependencyHelper.buildFakeDependency
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -14,7 +11,9 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import se.strawberry.api.DependenciesKey
 import se.strawberry.api.mockGateway
-import se.strawberry.common.Headers
+import se.strawberry.api.models.traffic.HttRequestModel
+import se.strawberry.api.models.traffic.HttpResponseModel
+import se.strawberry.api.models.traffic.RecordedTrafficInstanceModel
 import se.strawberry.common.Json
 import se.strawberry.service.request.RequestService
 
@@ -25,17 +24,25 @@ class RequestsRoutesTest {
     @Test
     fun `GET _proxy-api_requests - forwards query map to service and returns payload`() = testApplication {
         val fake = RecordingRequestService().apply {
-            listBody = """[{"id":"1"}]"""
+            listResult = listOf(
+                RecordedTrafficInstanceModel(
+                    id = "1",
+                    receivedAt = System.currentTimeMillis(),
+                    request = HttRequestModel("GET", "/test", emptyMap()),
+                    response = HttpResponseModel(200, emptyMap())
+                )
+            )
         }
         application {
             attributes.put(DependenciesKey, buildFakeDependency().copy(mapper = mapper, requestService = fake))
             mockGateway()
         }
 
-        val resp = client.get("/_proxy-api/requests?method=GET&limit=10")
+        val resp = client.get("/_proxy-api/traffic?method=GET&limit=10")
 
         assertEquals(HttpStatusCode.OK, resp.status)
-        assertEquals("""[{"id":"1"}]""", resp.bodyAsText())
+        val body = resp.bodyAsText()
+        assertTrue(body.contains("\"id\":\"1\""))
 
         assertEquals(1, fake.listCalls.size)
         val query = fake.listCalls.single()
@@ -51,9 +58,8 @@ class RequestsRoutesTest {
             mockGateway()
         }
 
-        val resp = client.get("/_proxy-api/requests/%20")
+        val resp = client.get("/_proxy-api/traffic/%20")
 
-        // IMPORTANT: this assumes you fixed the route to respondBadRequest("missing_id")
         assertEquals(HttpStatusCode.BadRequest, resp.status)
         assertTrue(resp.bodyAsText().contains("missing_id"))
         assertEquals(0, fake.byIdCalls.size)
@@ -62,45 +68,34 @@ class RequestsRoutesTest {
     // --- helpers ---
 
     private class RecordingRequestService : RequestService {
-        var listBody: String = "[]"
+        var listResult: List<RecordedTrafficInstanceModel> = emptyList()
         val listCalls = mutableListOf<Map<String, String>>()
         val byIdCalls = mutableListOf<String>()
         var clearCalls: Int = 0
         var exportCalls: Int = 0
 
-        override fun list(query: Map<String, String>): Response {
+        override fun list(query: Map<String, String>): List<RecordedTrafficInstanceModel> {
             listCalls += query
-            return json(200, listBody)
+            return listResult
         }
 
-        override fun byId(id: String): Response {
+        override fun byId(id: String): RecordedTrafficInstanceModel? {
             byIdCalls += id
-            return json(200, """{"id":"$id"}""")
+            return RecordedTrafficInstanceModel(
+                id = id,
+                receivedAt = System.currentTimeMillis(),
+                request = HttRequestModel("GET", "/test", emptyMap()),
+                response = HttpResponseModel(200, emptyMap())
+            )
         }
 
-        override fun clear(): Response {
+        override fun clear() {
             clearCalls++
-            return Response.response().status(204).build()
         }
 
-        override fun export(): Response {
+        override fun exportAsNdjson(): String {
             exportCalls++
-            return Response.response()
-                .status(200)
-                .headers(
-                    HttpHeaders(
-                        HttpHeader.httpHeader("Content-Type", "application/x-ndjson")
-                    )
-                )
-                .body("""{"id":"1"}\n""")
-                .build()
+            return """{"id":"1"}\n"""
         }
-
-        private fun json(code: Int, body: String): Response =
-            Response.response()
-                .status(code)
-                .headers(HttpHeaders(HttpHeader.httpHeader(Headers.CONTENT_TYPE, Headers.JSON)))
-                .body(body)
-                .build()
     }
 }

@@ -1,14 +1,17 @@
 package tests.unit
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.github.tomakehurst.wiremock.http.HttpHeader
 import com.github.tomakehurst.wiremock.http.HttpHeaders
 import com.github.tomakehurst.wiremock.http.LoggedResponse
 import com.github.tomakehurst.wiremock.stubbing.ServeEvent
 import com.github.tomakehurst.wiremock.verification.LoggedRequest
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.*
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import se.strawberry.common.Headers
 import se.strawberry.common.Json
@@ -22,7 +25,7 @@ class RequestServiceImplTest {
     private val mapper: ObjectMapper = Json.mapper
 
     @Test
-    fun `list should filter by sessionId and return json array`() {
+    fun `list should filter by sessionId and return list of models`() {
         val client = mockk<WireMockClient>()
         val service = RequestServiceImpl(mapper, client)
 
@@ -46,39 +49,38 @@ class RequestServiceImplTest {
 
         every { client.listServeEvents() } returns listOf(ev1, ev2)
 
-        val resp = service.list(mapOf("sessionId" to "s-2", "limit" to "200"))
+        val result = service.list(mapOf("sessionId" to "s-2", "limit" to "200"))
 
-        assertThat(resp.status, equalTo(200))
-        val body = resp.bodyAsString
-        assertThat(body, startsWith("["))
-        assertThat(body, containsString("\"url\":\"/api/test-2\""))
-        assertThat(body, not(containsString("\"url\":\"/api/test-1\"")))
 
+        assertEquals(1, result.size)
+        assertEquals("00000000-0000-0000-0000-000000000002", result[0].id)
+        assertEquals("/api/test-2", result[0].request.url)
+        assertEquals("POST", result[0].request.method)
+        assertEquals(500, result[0].response.status)
     }
 
     @Test
-    fun `byId should return 404 when not found`() {
+    fun `byId should return null when not found`() {
         val client = mockk<WireMockClient>()
         val service = RequestServiceImpl(mapper, client)
 
         every { client.findServeEvent("missing") } returns null
 
-        val resp = service.byId("missing")
+        val result = service.byId("missing")
 
-        assertThat(resp.status, equalTo(404))
-        assertThat(resp.bodyAsString, containsString("not_found"))
+        assertNull(result)
     }
 
     @Test
-    fun `clear should call resetRequests and return 204`() {
+    fun `clear should call resetRequests`() {
         val client = mockk<WireMockClient>()
         val service = RequestServiceImpl(mapper, client)
 
         every { client.resetRequests() } returns Unit
 
-        val resp = service.clear()
+        service.clear()
 
-        assertThat(resp.status, equalTo(204))
+        verify { client.resetRequests() }
     }
 
     // ---- helpers ----
@@ -97,14 +99,20 @@ class RequestServiceImplTest {
         every { loggedRequest.method.value() } returns method
         every { loggedRequest.loggedDate } returns loggedDate
         every { loggedRequest.bodyAsString } returns ""
-        every { loggedRequest.headers } returns HttpHeaders()
+
+        val requestHeaders = mockk<HttpHeaders>(relaxed = true)
+        every { requestHeaders.keys() } returns emptySet()
+        every { loggedRequest.headers } returns requestHeaders
 
         every { loggedRequest.getHeader(Headers.X_MOCK_SESSION_ID) } returns sessionId
         every { loggedRequest.getHeader("Content-Type") } returns "application/json"
 
+        val responseHeaders = mockk<HttpHeaders>(relaxed = true)
+        every { responseHeaders.keys() } returns emptySet()
+
         val loggedResponse = mockk<LoggedResponse>()
         every { loggedResponse.status } returns status
-        every { loggedResponse.headers } returns HttpHeaders()
+        every { loggedResponse.headers } returns responseHeaders
         every { loggedResponse.bodyAsString } returns ""
 
         val serveEvent = mockk<ServeEvent>()

@@ -1,18 +1,18 @@
 package se.strawberry.service.request
 
-import com.github.tomakehurst.wiremock.http.Response
+import se.strawberry.api.models.traffic.RecordedTrafficInstanceModel
 
 interface RequestService {
     /** List recorded requests with optional filters. */
-    fun list(query: Map<String, String>): Response
+    fun list(query: Map<String, String>): List<RecordedTrafficInstanceModel>
 
     /** Get recorded request by id. */
-    fun byId(id: String): Response
+    fun byId(id: String): RecordedTrafficInstanceModel?
 
     /** Clear recorded requests. */
-    fun clear(): Response
+    fun clear()
 
     /** Export recorded requests as NDJSON. */
-    fun export(): Response
+    fun exportAsNdjson(): String
 }
 

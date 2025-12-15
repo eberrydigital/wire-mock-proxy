@@ -1,11 +1,11 @@
 package se.strawberry.service.request
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.github.tomakehurst.wiremock.http.HttpHeader
-import com.github.tomakehurst.wiremock.http.HttpHeaders
 import com.github.tomakehurst.wiremock.http.Request
-import com.github.tomakehurst.wiremock.http.Response
 import com.github.tomakehurst.wiremock.stubbing.ServeEvent
+import se.strawberry.api.models.traffic.HttRequestModel
+import se.strawberry.api.models.traffic.HttpResponseModel
+import se.strawberry.api.models.traffic.RecordedTrafficInstanceModel
 import se.strawberry.common.Headers
 import se.strawberry.common.Paths.ADMIN_PREFIX
 import se.strawberry.common.Paths.API_PREFIX
@@ -18,7 +18,7 @@ class RequestServiceImpl(
     private val wireMockClient: WireMockClient
 ) : RequestService {
 
-    override fun list(query: Map<String, String>): Response {
+    override fun list(query: Map<String, String>): List<RecordedTrafficInstanceModel> {
         val method = query["method"]?.uppercase()
         val pathSub = query["path"]
         val statusFilter = query["status"]?.toIntOrNull()
@@ -29,7 +29,7 @@ class RequestServiceImpl(
         }
         val sessionId = query["sessionId"]?.trim()?.takeIf { it.isNotEmpty() }
 
-        val events = wireMockClient.listServeEvents().asSequence()
+        return wireMockClient.listServeEvents().asSequence()
             .sortedByDescending { it.request.loggedDate }
             .filter { event -> showInternal || !shouldBeHiddenFromUI(event.request.url) }
             .filter { method == null || it.request.method.value().equals(method, true) }
@@ -37,50 +37,31 @@ class RequestServiceImpl(
             .filter { statusFilter == null || it.response.status == statusFilter }
             .filter { sessionId == null || it.request.getHeader(Headers.X_MOCK_SESSION_ID) == sessionId }
             .take(limit)
-            .map { toDto(it) }
+            .map { toModel(it, includeBodies = false) }
             .toList()
-
-        return json(200, mapper.writeValueAsString(events))
     }
 
-    override fun byId(id: String): Response {
-        val ev = wireMockClient.findServeEvent(id)
-            ?: return json(404, """{"error":"not_found"}""")
-
-        if (shouldBeHiddenFromUI(ev.request.url)) {
-            return json(404, """{"error":"not_found"}""")
-        }
-
-        val json = mapper.writeValueAsString(toDto(ev, includeBodies = true))
-        return json(200, json)
+    override fun byId(id: String): RecordedTrafficInstanceModel? {
+        val ev = wireMockClient.findServeEvent(id) ?: return null
+        if (shouldBeHiddenFromUI(ev.request.url)) return null
+        return toModel(ev, includeBodies = true)
     }
 
-    override fun clear(): Response {
+    override fun clear() {
         wireMockClient.resetRequests()
-        return Response.response().status(204).build()
     }
 
-    override fun export(): Response {
+    override fun exportAsNdjson(): String {
         val sb = StringBuilder()
         wireMockClient.listServeEvents()
             .sortedBy { it.request.loggedDate }
             .forEach {
-                sb.append(mapper.writeValueAsString(toDto(it, includeBodies = true))).append('\n')
+                sb.append(mapper.writeValueAsString(toModel(it, includeBodies = true))).append('\n')
             }
-
-        return Response.response()
-            .status(200)
-            .headers(
-                HttpHeaders(
-                    HttpHeader.httpHeader("Content-Type", "application/x-ndjson"),
-                    HttpHeader.httpHeader("Content-Disposition", "attachment; filename=\"requests.jsonl\"")
-                )
-            )
-            .body(sb.toString())
-            .build()
+        return sb.toString()
     }
 
-    private fun toDto(ev: ServeEvent, includeBodies: Boolean = false): Map<String, Any?> {
+    private fun toModel(ev: ServeEvent, includeBodies: Boolean = false): RecordedTrafficInstanceModel {
         val req = ev.request
         val res = ev.response
 
@@ -98,34 +79,33 @@ class RequestServiceImpl(
         }
 
         val reqContentType = requestHeaderValue(req, "Content-Type")
-        val resContentType = headerValue(res.headers, "Content-Type")
+        val resContentType = res.headers?.getHeader("Content-Type")?.takeIf { it.isPresent }?.firstValue()
 
-        return mapOf(
-            "id" to ev.id.toString(),
-            "receivedAt" to req.loggedDate,
-            "timingMs" to ev.timing?.totalTime,
-            "request" to mapOf(
-                "method" to req.method.value(),
-                "url" to req.url,
-                "headers" to maskHeaders(
+        return RecordedTrafficInstanceModel(
+            id = ev.id.toString(),
+            receivedAt = req.loggedDate.time,
+            timingMs = ev.timing?.totalTime,
+            request = HttRequestModel(
+                method = req.method.value(),
+                url = req.url,
+                headers = maskHeaders(
                     req.headers?.keys().orEmpty().associateWith { k -> req.getHeader(k) }
                 ),
-                "body" to bodyPretty(req.bodyAsString?.takeIf { it.isNotEmpty() }, reqContentType),
-                "contentType" to reqContentType
+                body = bodyPretty(req.bodyAsString?.takeIf { it.isNotEmpty() }, reqContentType),
+                contentType = reqContentType
             ),
-            "response" to mapOf(
-                "status" to res.status,
-                "headers" to maskHeaders(
-                    res.headers?.keys().orEmpty().associateWith { k -> headerValue(res.headers, k) }
+            response = HttpResponseModel(
+                status = res.status,
+                headers = maskHeaders(
+                    res.headers?.keys().orEmpty().associateWith { k ->
+                        res.headers.getHeader(k)?.takeIf { it.isPresent }?.firstValue()
+                    }
                 ),
-                "body" to bodyPretty(res.bodyAsString?.takeIf { it.isNotEmpty() }, resContentType),
-                "contentType" to resContentType
+                body = bodyPretty(res.bodyAsString?.takeIf { it.isNotEmpty() }, resContentType),
+                contentType = resContentType
             )
         )
     }
-
-    private fun headerValue(headers: HttpHeaders?, name: String): String? =
-        headers?.getHeader(name)?.takeIf { it.isPresent }?.firstValue()
 
     private fun requestHeaderValue(req: Request, name: String): String? =
         req.headers?.getHeader(name)?.takeIf { it.isPresent }?.firstValue()
@@ -146,13 +126,6 @@ class RequestServiceImpl(
                 else -> v
             }
         }
-
-    private fun json(code: Int, body: String): Response =
-        Response.response()
-            .status(code)
-            .headers(HttpHeaders(HttpHeader.httpHeader(Headers.CONTENT_TYPE, Headers.JSON)))
-            .body(body)
-            .build()
 }
 
 

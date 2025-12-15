@@ -9,11 +9,12 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.util.*
 import se.strawberry.api.models.health.HealthResponse
+import se.strawberry.api.models.sessions.SessionsCreateRequestModel
 import se.strawberry.api.models.sessions.SessionsCloseRequestModel
+import se.strawberry.api.models.sessions.toResponse
 import se.strawberry.app.AppDependencies
 import se.strawberry.app.buildDependencies
 import se.strawberry.common.Headers
-import se.strawberry.common.Json
 import se.strawberry.config.AppConfig
 import se.strawberry.domain.stub.CreateStubRequest
 import se.strawberry.repository.session.SessionRepository
@@ -84,76 +85,83 @@ fun Application.mockGateway() {
 
 
         // RK4: Requests API
-        route("/_proxy-api/requests") {
+        route("/_proxy-api/traffic") {
             // List
             get {
                 val queryParameters = call.request.queryParameters
-                val query: Map<String, String> = queryParameters.names().associateWith { name -> queryParameters.getAll(name)?.lastOrNull() ?: "" }
-                val resp: WMResponse = dependencies.requestService.list(query)
-                respondFromWireMock(call, resp)
+                val query: Map<String, String> = queryParameters.names().associateWith { name ->
+                    queryParameters.getAll(name)?.lastOrNull() ?: ""
+                }
+                val traffic = dependencies.requestService.list(query)
+                call.respond(HttpStatusCode.OK, traffic)
             }
             // Get by id
             get("/{id}") {
                 val id = call.parameters["id"]
                 if (id.isNullOrBlank()) {
-                    call.respondBadRequest("missing_id")
+                    call.respondBadRequest("missing_id", "Request ID is required")
+                    return@get
+                }
+
+                val traffic = dependencies.requestService.byId(id)
+                if (traffic == null) {
+                    call.respondNotFound("not_found", "Request not found")
                 } else {
-                    val resp: WMResponse = dependencies.requestService.byId(id)
-                    respondFromWireMock(call, resp)
+                    call.respond(HttpStatusCode.OK, traffic)
                 }
             }
             // Clear
             delete {
-                val resp: WMResponse = dependencies.requestService.clear()
-                respondFromWireMock(call, resp)
+                dependencies.requestService.clear()
+                call.respond(HttpStatusCode.NoContent)
             }
             // Export NDJSON
             get("/export") {
-                val resp: WMResponse = dependencies.requestService.export()
-                respondFromWireMock(call, resp)
+                val ndjson = dependencies.requestService.exportAsNdjson()
+                call.response.header("Content-Type", "application/x-ndjson")
+                call.response.header("Content-Disposition", "attachment; filename=\"requests.jsonl\"")
+                call.respondText(ndjson, ContentType.parse("application/x-ndjson"), HttpStatusCode.OK)
             }
         }
 
         route("/_proxy-api/sessions") {
             // Create session
             post {
+                val body = call.receiveText()
+                val mapper = dependencies.mapper
+
+                val dto = try {
+                    if (body.isBlank()) {
+                        SessionsCreateRequestModel()
+                    } else {
+                        mapper.readValue(body, SessionsCreateRequestModel::class.java)
+                    }
+                } catch (_: Exception) {
+                    call.respondBadRequest("invalid_json", "Invalid request body")
+                    return@post
+                }
+
                 val id = UUID.randomUUID().toString()
                 val now = System.currentTimeMillis()
-                val s = SessionRepository.Session(
+                val session = SessionRepository.Session(
                     id = id,
-                    name = null,
-                    owner = null,
+                    name = dto.name,
+                    owner = dto.owner,
                     createdAt = now,
-                    expiresAt = null,
+                    expiresAt = dto.expiresAt,
                     status = SessionRepository.Session.Status.ACTIVE
                 )
-                dependencies.sessionRepository.create(s)
-                val payload = Json.mapper.writeValueAsString(
-                    mapOf(
-                        "id" to s.id,
-                        "status" to s.status.name,
-                        "createdAt" to s.createdAt,
-                        "expiresAt" to s.expiresAt
-                    )
-                )
-                call.respondText(payload, ContentType.Application.Json, HttpStatusCode.Created)
+                dependencies.sessionRepository.create(session)
+                call.respond(HttpStatusCode.Created, session.toResponse())
             }
             // Get session by id
             get("/{id}") {
                 val id = call.parameters["id"]
-                val s = id?.let { dependencies.sessionRepository.get(it) }
-                if (s == null) {
+                val session = id?.let { dependencies.sessionRepository.get(it) }
+                if (session == null) {
                     call.respondNotFound(reason = "not_found", message = "Session not found")
                 } else {
-                    val payload = Json.mapper.writeValueAsString(
-                        mapOf(
-                            "id" to s.id,
-                            "status" to s.status.name,
-                            "createdAt" to s.createdAt,
-                            "expiresAt" to s.expiresAt
-                        )
-                    )
-                    call.respondText(payload, ContentType.Application.Json)
+                    call.respond(HttpStatusCode.OK, session.toResponse())
                 }
             }
             // Close session
