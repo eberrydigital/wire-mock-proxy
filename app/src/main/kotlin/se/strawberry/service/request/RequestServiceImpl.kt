@@ -11,8 +11,6 @@ import se.strawberry.common.Paths.ADMIN_PREFIX
 import se.strawberry.common.Paths.API_PREFIX
 import se.strawberry.common.Paths.UI_ASSETS_PREFIX
 import se.strawberry.common.Paths.UI_ROOT
-import se.strawberry.config.UiBlacklist.DEVTOOLS_WELL_KNOWN
-import se.strawberry.config.UiBlacklist.FAVICON
 import se.strawberry.service.wiremock.WireMockClient
 
 class RequestServiceImpl(
@@ -133,9 +131,7 @@ class RequestServiceImpl(
         req.headers?.getHeader(name)?.takeIf { it.isPresent }?.firstValue()
 
     private fun shouldBeHiddenFromUI(url: String): Boolean {
-        if (url == FAVICON) return true
         if (url == UI_ROOT) return true
-        if (url.startsWith(DEVTOOLS_WELL_KNOWN)) return true
         if (url.startsWith(UI_ASSETS_PREFIX)) return true
         if (url.startsWith(API_PREFIX)) return true
         if (url.startsWith(ADMIN_PREFIX)) return true

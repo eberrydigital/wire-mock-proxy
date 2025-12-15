@@ -4,13 +4,11 @@ import java.net.URI
 
 
 data class AppConfig(
-    val port: Int,
-    val apiPort: Int,
-    val bindAddress: String,
-    val filesSource: FilesSource,
+    val wireMockServerPort: Int,
+    val ktorApiPort: Int,
+    val hostAddress: String,
     val allowedPorts: Set<Int>,
     val services: Map<String, URI>,
-    val uiEnabled: Boolean = true,
     val dynamo: DynamoConfig = DynamoConfig()
 ) {
     sealed class FilesSource {

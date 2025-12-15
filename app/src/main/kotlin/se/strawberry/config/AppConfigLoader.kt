@@ -8,42 +8,34 @@ object AppConfigLoader {
     private val log = LoggerFactory.getLogger(AppConfigLoader::class.java)
 
     fun load(): AppConfig {
-        val port = Env.int("PORT", 8080)!!
+        val port = Env.int(EnvVar.WireMockServerPort)
         require(port in 1..65535) { "PORT must be in 1..65535" }
 
-        val apiPort = Env.int("API_PORT", 8081)!!
-        require(apiPort in 1..65535 && apiPort != port) { "PORT must be in 1..65535" }
+        val ktorApiPort = Env.int(EnvVar.KtorApiPort)
+        require(ktorApiPort in 1..65535 && ktorApiPort != port) { "API_PORT must be in 1..65535 and different from PORT" }
 
-        val bindAddress = Env.str("BIND_ADDRESS", "0.0.0.0")!!
+        val hostAddress = Env.string(EnvVar.HostAddress)
 
-        val filesSource = Env.str("WIREMOCK_FILES_DIR")?.let {
-            AppConfig.FilesSource.Directory(it)
-        } ?: AppConfig.FilesSource.Classpath("wiremock")
-
-        val allowedPorts = parseAllowedPorts(Env.str("DYN_ALLOWED_PORTS", "80,443")!!)
+        val allowedPorts = parseAllowedPorts(Env.string(EnvVar.DynAllowedPorts))
         require(allowedPorts.isNotEmpty()) { "DYN_ALLOWED_PORTS resulted in empty set" }
 
-        val services = parseServiceMap(Env.str("SERVICE_MAP") ?: "")
+        val services = parseServiceMap(Env.string(EnvVar.ServiceMap))
         require(services.isNotEmpty()) {
             "SERVICE_MAP is empty. Provide at least one 'name=url' pair, e.g. SERVICE_MAP=omni=http://127.0.0.1:5000"
         }
 
-        val uiEnabled = Env.bool("ENABLE_PROXY_UI", true)
-
-        val dynamoEndpoint = Env.str("DYNAMO_ENDPOINT")?.let { URI(it) }
-        val dynamoRegion = Env.str("AWS_REGION", "eu-north-1")!!
-        val sessionsTable = Env.str("DYNAMO_SESSIONS_TABLE", "proxy-sessions")!!
-        val accessKeyId = Env.str("AWS_ACCESS_KEY_ID")
-        val secretAccessKey = Env.str("AWS_SECRET_ACCESS_KEY")
+        val dynamoEndpoint = URI(Env.string(EnvVar.DynamoEndpoint))
+        val dynamoRegion = Env.string(EnvVar.AwsRegion)
+        val sessionsTable = Env.string(EnvVar.DynamoSessionsTable)
+        val accessKeyId = Env.string(EnvVar.AwsAccessKeyId)
+        val secretAccessKey = Env.string(EnvVar.AwsSecretAccessKey)
 
         val cfg = AppConfig(
-            port = port,
-            apiPort = apiPort,
-            bindAddress = bindAddress,
-            filesSource = filesSource,
+            wireMockServerPort = port,
+            ktorApiPort = ktorApiPort,
+            hostAddress = hostAddress,
             allowedPorts = allowedPorts,
             services = services,
-            uiEnabled = uiEnabled,
             dynamo = DynamoConfig(
                 endpoint = dynamoEndpoint,
                 region = dynamoRegion,
@@ -53,13 +45,9 @@ object AppConfigLoader {
             )
         )
 
-        val filesSrcLog = when (filesSource) {
-            is AppConfig.FilesSource.Classpath -> "classpath:${filesSource.root}"
-            is AppConfig.FilesSource.Directory -> "dir:${filesSource.path}"
-        }
         log.info(
-            "AppConfig => port={}, bind={}, files={}, allowedPorts={}, services={}, dynamoEndpoint={}, dynamoRegion={}, sessionsTable={}",
-            cfg.port, cfg.bindAddress, filesSrcLog,
+            "AppConfig => port={}, bind={}, allowedPorts={}, services={}, dynamoEndpoint={}, dynamoRegion={}, sessionsTable={}",
+            cfg.wireMockServerPort, cfg.hostAddress,
             cfg.allowedPorts.sorted().joinToString(","),
             cfg.services.keys.sorted().joinToString(","),
             cfg.dynamo.endpoint?.toString() ?: "(default)",

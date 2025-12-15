@@ -28,15 +28,9 @@ object ServerBootstrap {
         val cfg: AppConfig = AppConfigLoader.load()
         val server = WireMockServer(
             options()
-                .port(cfg.port)
-                .bindAddress(cfg.bindAddress)
+                .port(cfg.wireMockServerPort)
+                .bindAddress(cfg.hostAddress)
                 .templatingEnabled(true)
-                .apply {
-                    when (val fs = cfg.filesSource) {
-                        is AppConfig.FilesSource.Classpath -> usingFilesUnderClasspath(fs.root)
-                        is AppConfig.FilesSource.Directory -> usingFilesUnderDirectory(fs.path)
-                    }
-                }
                 // High level order of processing:
                 // 1) DynamicRoutingGuard — let through only correct external requests (headers, service names, ports).
                 // 2) TtlGuardMatcher — TTL (time to live) stub logic.
@@ -55,7 +49,7 @@ object ServerBootstrap {
 
         server.start()
         ServerRef.server = server
-        log.info("WireMock proxy started on {}:{}; services: {}", cfg.bindAddress, cfg.port, cfg.services.keys)
+        log.info("WireMock proxy started on {}:{}; services: {}", cfg.hostAddress, cfg.wireMockServerPort, cfg.services.keys)
 
         // Ui Files
         registerRulesForFrontendRequests(server)

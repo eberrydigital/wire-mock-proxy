@@ -11,15 +11,15 @@ object KtorBootstrap {
     fun start(cfg: AppConfig, deps: AppDependencies): EmbeddedServer<NettyApplicationEngine, NettyApplicationEngine.Configuration> {
         val server = embeddedServer(
             Netty,
-            host = cfg.bindAddress,
-            port = cfg.apiPort
+            host = cfg.hostAddress,
+            port = cfg.ktorApiPort
         ) {
             attributes.put(DependenciesKey, deps)
             mockGateway()
         }
 
         server.start(wait = false)
-        log.info("Ktor API started on {}:{}", cfg.bindAddress, cfg.apiPort)
+        log.info("Ktor API started on {}:{}", cfg.hostAddress, cfg.ktorApiPort)
         return server
     }
 }
