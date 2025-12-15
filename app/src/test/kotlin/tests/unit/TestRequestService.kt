@@ -1,7 +1,6 @@
 package tests.unit
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.github.tomakehurst.wiremock.http.HttpHeader
 import com.github.tomakehurst.wiremock.http.HttpHeaders
 import com.github.tomakehurst.wiremock.http.LoggedResponse
 import com.github.tomakehurst.wiremock.stubbing.ServeEvent
@@ -9,16 +8,14 @@ import com.github.tomakehurst.wiremock.verification.LoggedRequest
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers.*
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 import se.strawberry.common.Headers
 import se.strawberry.common.Json
 import se.strawberry.service.request.RequestServiceImpl
 import se.strawberry.service.wiremock.WireMockClient
-import java.util.Date
-import java.util.UUID
+import java.util.*
 
 class RequestServiceImplTest {
 
