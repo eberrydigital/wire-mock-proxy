@@ -3,6 +3,7 @@ package tests.setup
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.common.Slf4jNotifier
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
+import io.github.cdimascio.dotenv.dotenv
 import io.ktor.server.engine.EmbeddedServer
 import io.ktor.server.netty.NettyApplicationEngine
 import okhttp3.OkHttpClient
@@ -18,6 +19,8 @@ import org.junit.jupiter.api.extension.ExtendWith
 import se.strawberry.app.KtorBootstrap
 import se.strawberry.app.buildDependencies
 import se.strawberry.config.AppConfigLoader
+import se.strawberry.config.Env
+import se.strawberry.config.EnvVar
 import uk.org.webcompere.systemstubs.environment.EnvironmentVariables
 import uk.org.webcompere.systemstubs.jupiter.SystemStub
 import java.net.ServerSocket
@@ -32,7 +35,6 @@ abstract class BaseTest {
     protected lateinit var ktorApp: EmbeddedServer<NettyApplicationEngine, NettyApplicationEngine.Configuration>
     protected lateinit var http: OkHttpClient
     protected lateinit var upstreamServiceName: String
-    protected var apiPort: Int = 0
 
     @SystemStub
     protected val env = EnvironmentVariables()
@@ -46,27 +48,17 @@ abstract class BaseTest {
 
     @BeforeEach
     fun setUp() {
+        loadEnv()
         upstream = WireMockServer(
             options()
-                .dynamicPort()
+                .port(443) //one fro DYN_ALLOWED_PORTS
                 .notifier(Slf4jNotifier(false))
                 .disableRequestJournal()
         )
         upstream.start()
 
         upstreamServiceName = "testInstanceOfWireMockServer"
-
-        val proxyPort = freePort()
-        apiPort = freePort()
-
-        // ENV for both servers
-        env.set("SERVICE_MAP", "$upstreamServiceName=${upstreamBaseUrl()}")
-        env.set("DYN_ALLOWED_PORTS",
-            upstream.port()
-                .toString()
-        )
-        env.set("PORT", proxyPort.toString())
-        env.set("API_PORT", apiPort.toString())
+        env.set(EnvVar.ServiceMap.key, "$upstreamServiceName=${upstreamBaseUrl()}")
 
         // Start proxy (WireMock ingress)
         proxy = ServerBootstrap.start()
@@ -107,7 +99,18 @@ abstract class BaseTest {
 
     protected fun proxyBaseUrl(): String = "http://localhost:${proxy.port()}"
     protected fun upstreamBaseUrl(): String = "http://localhost:${upstream.port()}"
-    protected fun apiBaseUrl(): String = "http://localhost:$apiPort"
+    protected fun apiBaseUrl(): String = "http://localhost:${Env.int(EnvVar.KtorApiPort)}"
+    private fun loadEnv() {
+        val dotenv = dotenv {
+            filename = ".env.test"
+            ignoreIfMalformed = true
+            ignoreIfMissing = false
+        }
+
+        dotenv.entries().forEach { entry ->
+            env.set(entry.key, entry.value)
+        }
+    }
 }
 
 private fun freePort(): Int = ServerSocket(0).use { it.localPort }
