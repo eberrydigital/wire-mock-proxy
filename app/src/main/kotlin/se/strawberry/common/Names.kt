@@ -27,7 +27,7 @@ object Paths {
 
 object Headers {
     const val CONTENT_TYPE = "Content-Type"
-    const val JSON = "application/json"
+    const val JSON: String = "application/json"
     const val X_MOCK_TARGET_SERVICE = "X-Mock-Target-Service"
     const val X_MOCK_SESSION_ID = "X-Mock-Session-Id"
 }

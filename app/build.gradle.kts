@@ -39,7 +39,7 @@ dependencies {
 
     // Use JUnit Jupiter for testing.
     testImplementation(libs.junit.jupiter)
-    testImplementation("com.squareup.okhttp3:okhttp:5.1.0")
+    implementation("com.squareup.okhttp3:okhttp:5.1.0")
     testImplementation("uk.org.webcompere:system-stubs-jupiter:2.1.8")
     testImplementation(kotlin("test"))
     testImplementation("io.mockk:mockk:1.14.7")

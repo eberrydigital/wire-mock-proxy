@@ -3,6 +3,8 @@ package se.strawberry.app
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import org.slf4j.LoggerFactory
+import se.strawberry.api.DependenciesKey
+import se.strawberry.api.mockGateway
 import se.strawberry.config.AppConfig
 
 object KtorBootstrap {

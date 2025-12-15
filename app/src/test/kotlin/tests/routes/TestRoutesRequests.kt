@@ -12,8 +12,8 @@ import io.ktor.server.testing.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import se.strawberry.app.DependenciesKey
-import se.strawberry.app.mockGateway
+import se.strawberry.api.DependenciesKey
+import se.strawberry.api.mockGateway
 import se.strawberry.common.Headers
 import se.strawberry.common.Json
 import se.strawberry.service.request.RequestService

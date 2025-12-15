@@ -1,12 +1,16 @@
-package se.strawberry.app
+package se.strawberry.api
 
 import io.ktor.http.*
 import io.ktor.serialization.jackson.*
 import io.ktor.server.application.*
+import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.util.*
+import se.strawberry.app.AppDependencies
+import se.strawberry.api.models.sessions.SessionsCloseRequestModel
+import se.strawberry.app.buildDependencies
 import se.strawberry.common.Headers
 import se.strawberry.common.Json
 import se.strawberry.config.AppConfig
@@ -24,7 +28,7 @@ fun Application.installDependencies(cfg: AppConfig) {
 fun Application.dependencies(): AppDependencies = attributes[DependenciesKey]
 
 fun Application.mockGateway() {
-    install(io.ktor.server.plugins.contentnegotiation.ContentNegotiation) { jackson() }
+    install(ContentNegotiation) { jackson() }
     val dependencies = dependencies()
 
     routing {
@@ -156,7 +160,7 @@ fun Application.mockGateway() {
                 val body = call.receiveText()
                 val mapper = dependencies.mapper
                 val dto = try {
-                    mapper.readValue(body, SessionCloseRequestModel::class.java)
+                    mapper.readValue(body, SessionsCloseRequestModel::class.java)
                 } catch (_: Exception) {
                     call.respondBadRequest("invalid_json")
                     return@patch

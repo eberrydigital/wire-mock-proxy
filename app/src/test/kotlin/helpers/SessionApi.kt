@@ -5,7 +5,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
-import se.strawberry.app.SessionCloseRequestModel
+import se.strawberry.api.models.sessions.SessionsCloseRequestModel
 import se.strawberry.common.Json
 
 /**
@@ -63,7 +63,7 @@ object SessionApi {
         apiBaseUrl: String,
         sessionId: String
     ): Response {
-        val body = Json.mapper.writeValueAsString(SessionCloseRequestModel(sessionId)).toRequestBody(JSON)
+        val body = SessionsCloseRequestModel(sessionId).toJsonBody()
         val req = Request.Builder()
             .url("$apiBaseUrl/_proxy-api/sessions/close")
             .patch(body)
