@@ -8,8 +8,9 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.util.*
-import se.strawberry.app.AppDependencies
+import se.strawberry.api.models.health.HealthResponse
 import se.strawberry.api.models.sessions.SessionsCloseRequestModel
+import se.strawberry.app.AppDependencies
 import se.strawberry.app.buildDependencies
 import se.strawberry.common.Headers
 import se.strawberry.common.Json
@@ -34,7 +35,7 @@ fun Application.mockGateway() {
     routing {
         // Health
         get("/_proxy-api/health") {
-            call.respondText("{\"status\":\"ok\"}", ContentType.Application.Json, HttpStatusCode.OK)
+            call.respond(HttpStatusCode.OK, HealthResponse())
         }
 
         // RK3: Stubs API
