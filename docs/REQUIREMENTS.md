@@ -17,17 +17,12 @@ A session represents an isolated proxying context:
 
 ### Traffic
 
-Traffic consists of:
-
-- Full HTTP request and response data
-- Metadata (timestamp, duration, status, stubbed vs proxied)
-- Associated session and target service
-
-Traffic is:
-
+Traffic is: 
 - Captured automatically
 - Streamed in real time
 - Persisted for later inspection
+
+The way we work with traffic is descrbied in the file docs/02_Target_Architecture_v2.md in the section.
 
 ### Stub
 A stub defines how specific requests should be intercepted and mocked:
@@ -70,7 +65,7 @@ A stub defines how specific requests should be intercepted and mocked:
 - PK: sessionId
 - SK: stubId
 - Attributes:
-  - status (ACTIVE, DISABLED, EXPIRED, EXHAUSTED)
+  - status (ACTIVE, EXPIRED, EXHAUSTED)
   - priority
   - ttl / expiresAt
   - usesLeft
@@ -126,7 +121,7 @@ Key points:
 - WebSocket support is not implemented, but it is necessary so that Frontend could show the proxying traffic within a session in real time.
 - WireMock 3 is used as an embedded server for stubbing and proxying.
 - KTOR is responsible for routing, session management, WireMock integrations, and business logic.
-- Persistent stubs PR: sessionId, SK: stubId. Attributes: status (ACTIVE/DISABLED/EXPIRED/EXHAUSTED), createdAt, updatedAt, expiresAt, usesLeft (nullable), priority, mappingJson (WireMock mapping JSON as the “rendered” truth), purgeAt (epoch seconds) = session.createdAt + 48h (or stub created + 48h). Storing mappingJson is pragmatic: you don’t have to perfectly re-create WireMock mappings from a custom model later. 
+- Persistent stubs PR: sessionId, SK: stubId. Attributes: status (ACTIVE/EXPIRED/EXHAUSTED), createdAt, updatedAt, expiresAt, usesLeft (nullable), priority, mappingJson (WireMock mapping JSON as the “rendered” truth), purgeAt (epoch seconds) = session.createdAt + 48h (or stub created + 48h). Storing mappingJson is pragmatic: you don’t have to perfectly re-create WireMock mappings from a custom model later. 
 - The project is under development, so backward compatibility is not a concern at this point.
 - It is agreed that user will provide service map which consists of the name of the service and its target URL. The proxy will use this map to forward traffic to the correct target service There can be multiple services defined in the map.
 - TTL for sessions should be 24 hours. After that, the sessions should be expired. The related data should be available for the next 48 hours.
@@ -168,7 +163,6 @@ The Wire Mock Proxy service is deployed and configured with:
 
 #### 1. User Opens the Frontend Application
 - User navigates to the Wire Mock Proxy web UI (e.g., `https://proxy-tool.company.com`)
-- Logs in (if authentication is implemented) or directly accesses the dashboard
 - Sees the main dashboard with options to:
   - Create a new session
   - Browse available target services
@@ -314,7 +308,6 @@ User copies the configuration and applies it to their client application.
   - Match count: How many times this stub has been applied
 - User can:
   - **Edit** a stub: Modify response, extend TTL, increase uses
-  - **Disable** a stub temporarily: Toggle on/off without deleting
   - **Delete** a stub: Remove permanently
   - **Clone** a stub: Duplicate and modify for similar scenarios
 
