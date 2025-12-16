@@ -35,12 +35,12 @@ fun Application.mockGateway() {
 
     routing {
         // Health
-        get("/_proxy-api/health") {
+        get(Endpoints.Paths.HEALTH) {
             call.respond(HttpStatusCode.OK, HealthResponse())
         }
 
         // RK3: Stubs API
-        route("/_proxy-api/stubs") {
+        route(Endpoints.Paths.STUBS,) {
 
             // Create stub
             post {
@@ -85,7 +85,7 @@ fun Application.mockGateway() {
 
 
         // RK4: Requests API
-        route("/_proxy-api/traffic") {
+        route(Endpoints.Paths.TRAFFIC,) {
             // List
             get {
                 val queryParameters = call.request.queryParameters
@@ -124,7 +124,7 @@ fun Application.mockGateway() {
             }
         }
 
-        route("/_proxy-api/sessions") {
+        route(Endpoints.Paths.SESSIONS,) {
             // Create session
             post {
                 val body = call.receiveText()

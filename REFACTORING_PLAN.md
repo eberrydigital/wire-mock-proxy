@@ -79,18 +79,17 @@ Steps (commits):
    - Ensure mappings apply correctly and persist across restarts if applicable.
 
 ## Phase R4 — Session Isolation in Proxy Layer
-Goal: Ensure per-session isolation via `X-Mock-Session` header end-to-end.
+Goal: Ensure per-session isolation via `X-Mock-Session-Id` header end-to-end.
 Estimate: 1–1.5 days
 
 Steps (commits):
-1. feat: extract sessionId from path or headers in proxy pipeline
+1. feat: extract sessionId from headers in proxy pipeline
    - Central middleware to resolve `sessionId` and attach to request context.
 2. feat: enforce X-Mock-Session-Id header for wiremock traffic
    - Always send `X-Mock-Session: {sessionId}` to WireMock.
 3. refactor: update stub creation to use session-aware mappings
-   - All new mappings include header matcher for `X-Mock-Session`.
-4. migration: backfill existing stubs with default/global session
-   - Migrate legacy mappings to `sessionId="global"` or split per scenario.
+   - All new mappings include header matcher for `X-Mock-Session-Id`.
+4. migration: No backward compatibility needed since the probject is not in production yet.
 
 ## Phase R5 — WebSocket and Domain Events
 Goal: Live traffic and stub lifecycle events per session.
@@ -111,9 +110,8 @@ Goal: Persist sessions, recorded_requests, and stubs.
 Estimate: 2–3 days
 
 Steps (commits):
-1. chore: add Postgres dependency and configuration
-   - Add driver; config via env/Secrets; local docker-compose for dev.
-2. feat: add migrations for sessions and recorded_requests (Flyway/Liquibase)
+1. chore: add DynamoDB dependency and configuration
+2. feat: Create tables for sessions and recorded_requests
    - Initial schema; apply automatically on startup.
 3. feat: implement repositories with DB persistence
    - Replace in-memory adapters with DB-backed implementations.

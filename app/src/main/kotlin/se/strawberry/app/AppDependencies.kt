@@ -28,7 +28,7 @@ fun buildDependencies(cfg: AppConfig): AppDependencies {
     val requestService: RequestService = RequestServiceImpl(mapper, wireMockClient)
 
     val dynamo = DynamoClientFactory.create(cfg.dynamo)
-    val sessionRepository: SessionRepository = DynamoSessionRepository(dynamo, cfg.dynamo.sessionsTable)
+    val sessionRepository: SessionRepository = DynamoSessionRepository(dynamo)
 
     return AppDependencies(
         mapper = mapper,

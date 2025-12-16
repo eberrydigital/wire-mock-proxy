@@ -3,6 +3,7 @@ package se.strawberry.app
 import se.strawberry.config.AppConfigLoader
 import se.strawberry.infrastructure.dynamo.DynamoBootstrap
 import se.strawberry.infrastructure.dynamo.DynamoClientFactory
+import se.strawberry.repository.RepositoryConstants.DYNAMO.SESSION_TABLE_NAME
 
 fun main() {
     val cfg = AppConfigLoader.load()
@@ -10,7 +11,7 @@ fun main() {
 
     DynamoBootstrap.ensureSessionsTable(
         dynamo = dynamoClient,
-        tableName = cfg.dynamo.sessionsTable
+        tableName = SESSION_TABLE_NAME
     )
 
     val deps = buildDependencies(cfg)

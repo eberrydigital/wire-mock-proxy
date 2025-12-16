@@ -17,7 +17,7 @@ if ! ./scripts/seed-dynamodb-local.sh; then
   exit 1
 fi
 
-# Export reasonable defaults; customize as needed
+# Change it so that we use either .env or .env.test depending on the environment
 export PORT=${PORT:-8080}
 export DYN_ALLOWED_PORTS=${DYN_ALLOWED_PORTS:-80,443}
 # Example service map; change omni mapping to your target

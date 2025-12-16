@@ -16,8 +16,6 @@ data class DynamoConfig(
     val endpoint: URI? = null,
     /** AWS region (required by SDK even for local). */
     val region: String = "eu-north-1",
-    /** Sessions table name. */
-    val sessionsTable: String = "proxy-sessions",
     /** Credentials (dummy values are OK for local). */
     val accessKeyId: String? = null,
     val secretAccessKey: String? = null,

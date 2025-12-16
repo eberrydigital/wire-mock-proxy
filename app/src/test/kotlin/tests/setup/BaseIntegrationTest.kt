@@ -32,6 +32,8 @@ import uk.org.webcompere.systemstubs.environment.EnvironmentVariables
 import uk.org.webcompere.systemstubs.jupiter.SystemStub
 import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension
 import org.junit.jupiter.api.extension.ExtendWith
+import se.strawberry.repository.RepositoryConstants.DYNAMO.SESSION_TABLE_NAME
+import se.strawberry.repository.RepositoryConstants.DYNAMO.TRAFFIC_TABLE_NAME
 import java.util.concurrent.TimeUnit
 
 /**
@@ -165,7 +167,7 @@ abstract class BaseIntegrationTest {
         // DynamoDB configuration pointing to LocalStack
         env.set(EnvVar.DynamoEndpoint.key, localstack.getEndpointOverride(Service.DYNAMODB).toString())
         env.set(EnvVar.AwsRegion.key, localstack.region)
-        env.set(EnvVar.DynamoSessionsTable.key, "proxy-sessions")
+        env.set(EnvVar.DynamoSessionsTable.key, SESSION_TABLE_NAME)
         env.set("AWS_ACCESS_KEY_ID", localstack.accessKey)
         env.set("AWS_SECRET_ACCESS_KEY", localstack.secretKey)
     }
@@ -193,7 +195,7 @@ abstract class BaseIntegrationTest {
             // Create sessions table
             dynamoClient.createTable(
                 CreateTableRequest.builder()
-                    .tableName("proxy-sessions")
+                    .tableName(SESSION_TABLE_NAME)
                     .attributeDefinitions(
                         AttributeDefinition.builder()
                             .attributeName("sessionId")
@@ -217,7 +219,7 @@ abstract class BaseIntegrationTest {
             // Create proxy-traffic table
             dynamoClient.createTable(
                 CreateTableRequest.builder()
-                    .tableName("proxy-traffic")
+                    .tableName(TRAFFIC_TABLE_NAME)
                     .attributeDefinitions(
                         AttributeDefinition.builder()
                             .attributeName("sessionId")
@@ -246,14 +248,14 @@ abstract class BaseIntegrationTest {
             // Scan and delete all items from sessions table
             val sessionsItems = dynamoClient.scan(
                 ScanRequest.builder()
-                    .tableName("proxy-sessions")
+                    .tableName(SESSION_TABLE_NAME)
                     .build()
             ).items()
 
             sessionsItems.forEach { item ->
                 dynamoClient.deleteItem(
                     DeleteItemRequest.builder()
-                        .tableName("proxy-sessions")
+                        .tableName(SESSION_TABLE_NAME)
                         .key(mapOf("sessionId" to item["sessionId"]))
                         .build()
                 )
@@ -262,14 +264,14 @@ abstract class BaseIntegrationTest {
             // Scan and delete all items from proxy-traffic table
             val trafficItems = dynamoClient.scan(
                 ScanRequest.builder()
-                    .tableName("proxy-traffic")
+                    .tableName(TRAFFIC_TABLE_NAME)
                     .build()
             ).items()
 
             trafficItems.forEach { item ->
                 dynamoClient.deleteItem(
                     DeleteItemRequest.builder()
-                        .tableName("proxy-traffic")
+                        .tableName(TRAFFIC_TABLE_NAME)
                         .key(mapOf("sessionId" to item["sessionId"]))
                         .build()
                 )

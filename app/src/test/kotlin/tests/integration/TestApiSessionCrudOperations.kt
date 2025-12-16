@@ -7,6 +7,7 @@ import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.*
 import org.junit.jupiter.api.Test
 import se.strawberry.common.Json
+import se.strawberry.repository.RepositoryConstants.DYNAMO.SESSION_TABLE_NAME
 import se.strawberry.repository.session.SessionRepository
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue
 import tests.setup.BaseIntegrationTest
@@ -34,7 +35,7 @@ class TestApiSessionCrudOperations : BaseIntegrationTest() {
         // Verify the session exists in DynamoDB
 
         val dbItem = dynamoClient.getItem { builder ->
-            builder.tableName("proxy-sessions").key(
+            builder.tableName(SESSION_TABLE_NAME).key(
                 mapOf("sessionId" to AttributeValue.builder()
                     .s(session.id)
                     .build()
