@@ -1,9 +1,9 @@
 package se.strawberry.app
 
-import DynamoSessionRepository
 import com.fasterxml.jackson.databind.ObjectMapper
 import se.strawberry.common.Json
 import se.strawberry.repository.session.SessionRepository
+import se.strawberry.repository.session.DynamoDbSessionRepository
 import se.strawberry.infrastructure.dynamo.DynamoClientFactory
 import se.strawberry.service.stub.StubService
 import se.strawberry.service.stub.StubServiceImpl
@@ -28,7 +28,7 @@ fun buildDependencies(cfg: AppConfig): AppDependencies {
     val requestService: RequestService = RequestServiceImpl(mapper, wireMockClient)
 
     val dynamo = DynamoClientFactory.create(cfg.dynamo)
-    val sessionRepository: SessionRepository = DynamoSessionRepository(dynamo)
+    val sessionRepository: SessionRepository = DynamoDbSessionRepository(dynamo)
 
     return AppDependencies(
         mapper = mapper,

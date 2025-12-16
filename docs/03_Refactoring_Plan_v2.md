@@ -8,7 +8,7 @@ This checklist is organized into phases. Each step should be:
 
 ## Phase 0 — Baseline hygiene & scaffolding
 
-1. **Commit: Fix repository packaging / naming**
+1. **Commit: Fix repository packaging / naming** :Done
    - Goal: remove default-package repository risk and standardize imports.
    - Outcome: session repository implementation lives in a proper package; build remains green.
 

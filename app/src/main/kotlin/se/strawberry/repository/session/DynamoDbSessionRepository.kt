@@ -1,3 +1,5 @@
+package se.strawberry.repository.session
+
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import se.strawberry.repository.RepositoryConstants.DYNAMO.SESSION_TABLE_NAME
@@ -10,11 +12,11 @@ import software.amazon.awssdk.services.dynamodb.model.PutItemRequest
 import software.amazon.awssdk.services.dynamodb.model.ReturnValue
 import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest
 
-class DynamoSessionRepository(
+class DynamoDbSessionRepository(
     private val dynamo: DynamoDbClient
 ) : SessionRepository {
 
-    private val log: Logger = LoggerFactory.getLogger(DynamoSessionRepository::class.java)
+    private val log: Logger = LoggerFactory.getLogger(DynamoDbSessionRepository::class.java)
 
     override fun create(session: SessionRepository.Session): Boolean {
         val item = toItem(session)
