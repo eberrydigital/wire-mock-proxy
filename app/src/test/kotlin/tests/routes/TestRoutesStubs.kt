@@ -14,9 +14,16 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import se.strawberry.api.DependenciesKey
 import se.strawberry.api.mockGateway
+import se.strawberry.api.models.stub.CreateStubRequest
+import se.strawberry.api.models.stub.Ephemeral
+import se.strawberry.api.models.stub.ReqMatch
+import se.strawberry.api.models.stub.ReqMatchMethods
+import se.strawberry.api.models.stub.RespDef
+import se.strawberry.api.models.stub.RespMode
+import se.strawberry.api.models.stub.UrlMatch
+import se.strawberry.api.models.stub.UrlMatchType
 import se.strawberry.common.Headers
 import se.strawberry.common.Json
-import se.strawberry.domain.stub.*
 import se.strawberry.service.stub.StubService
 
 class StubsRoutesTest {

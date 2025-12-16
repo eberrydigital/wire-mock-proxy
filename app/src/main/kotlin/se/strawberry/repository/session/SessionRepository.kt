@@ -2,7 +2,6 @@ package se.strawberry.repository.session
 
 /**
  * Repository boundary for sessions.
- * R1.3: interface only; implementation will arrive in R2.
  */
 interface SessionRepository {
     data class Session(

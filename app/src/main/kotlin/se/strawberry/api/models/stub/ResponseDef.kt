@@ -1,4 +1,4 @@
-package se.strawberry.domain.stub
+package se.strawberry.api.models.stub
 
 data class Ephemeral(
     val uses: Int? = 1,

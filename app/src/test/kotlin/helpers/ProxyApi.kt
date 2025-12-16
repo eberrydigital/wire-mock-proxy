@@ -5,10 +5,11 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
+import se.strawberry.api.Endpoints
 import se.strawberry.common.Headers.X_MOCK_SESSION_ID
 import se.strawberry.common.Headers.X_MOCK_TARGET_SERVICE
 import se.strawberry.common.Json
-import se.strawberry.domain.stub.CreateStubRequest
+import se.strawberry.api.models.stub.CreateStubRequest
 
 /**
  * Utility for executing _proxy-api calls
@@ -31,7 +32,7 @@ object ProxyApi {
         val body = Json.mapper.writeValueAsString(stub).toRequestBody(JSON)
 
         val req = Request.Builder()
-            .url("$apiBaseUrl/_proxy-api/stubs")
+            .url("$apiBaseUrl${Endpoints.Paths.STUBS}")
             .addHeader("Content-Type", "application/json")
             .addHeader(X_MOCK_TARGET_SERVICE, targetService)
             .apply { if (sessionId != null) addHeader(X_MOCK_SESSION_ID, sessionId) }

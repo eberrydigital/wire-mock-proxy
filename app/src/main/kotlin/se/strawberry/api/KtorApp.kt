@@ -16,7 +16,7 @@ import se.strawberry.app.AppDependencies
 import se.strawberry.app.buildDependencies
 import se.strawberry.common.Headers
 import se.strawberry.config.AppConfig
-import se.strawberry.domain.stub.CreateStubRequest
+import se.strawberry.api.models.stub.CreateStubRequest
 import se.strawberry.repository.session.SessionRepository
 import java.util.*
 import com.github.tomakehurst.wiremock.http.Response as WMResponse
@@ -39,7 +39,6 @@ fun Application.mockGateway() {
             call.respond(HttpStatusCode.OK, HealthResponse())
         }
 
-        // RK3: Stubs API
         route(Endpoints.Paths.STUBS,) {
 
             // Create stub
@@ -83,8 +82,6 @@ fun Application.mockGateway() {
             }
         }
 
-
-        // RK4: Requests API
         route(Endpoints.Paths.TRAFFIC,) {
             // List
             get {
@@ -204,5 +201,6 @@ private suspend fun respondFromWireMock(call: ApplicationCall, wm: WMResponse) {
 
 private fun ApplicationCall.sessionIdOrNull(): String? =
     request.headers[Headers.X_MOCK_SESSION_ID]?.trim()?.takeIf { it.isNotEmpty() }
+
 
 

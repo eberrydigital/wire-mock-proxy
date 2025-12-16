@@ -31,13 +31,9 @@ object ServerBootstrap {
                 .port(cfg.wireMockServerPort)
                 .bindAddress(cfg.hostAddress)
                 .templatingEnabled(true)
-                // High level order of processing:
-                // 1) DynamicRoutingGuard — let through only correct external requests (headers, service names, ports).
-                // 2) TtlGuardMatcher — TTL (time to live) stub logic.
-                // 3) RequestsApiTransformer — API that our frontend communicates with, starts with /_proxy-api.
-                // 4) UpstreamPatchTransformer — patch responses from upstream services if needed.
-                // 5) EphemeralServeEventListener — decrement uses/TTL, remove stubs if needed.
-                // 6) ServiceTemplateHelpers — helper functions for response templating.
+                // 1) TtlGuardMatcher — TTL (time to live) stub logic.
+                // 2) EphemeralServeEventListener — decrement uses/TTL, remove stubs if needed.
+                // 3) ServiceTemplateHelpers — helper functions for response templating.
                 .extensions(
                     DynamicRoutingGuard(cfg.services, cfg.allowedPorts),
                     TtlGuardMatcher(),
@@ -51,9 +47,6 @@ object ServerBootstrap {
         ServerRef.server = server
         log.info("WireMock proxy started on {}:{}; services: {}", cfg.hostAddress, cfg.wireMockServerPort, cfg.services.keys)
 
-        // Ui Files
-        registerRulesForFrontendRequests(server)
-
         server.stubFor(
             any(urlMatching(".*")).atPriority(PROXY_FALLBACK)
                 .willReturn(
@@ -65,38 +58,5 @@ object ServerBootstrap {
 
         Runtime.getRuntime().addShutdownHook(Thread { server.stop() })
         return server
-    }
-
-    private fun registerRulesForFrontendRequests(server: WireMockServer) {
-        server.stubFor(
-            get(urlEqualTo(UI_ROOT)).atPriority(UI)
-                .willReturn(
-                    aResponse()
-                        .withHeader("Content-Type", "text/html; charset=utf-8")
-                        .withHeader("Cache-Control", "no-store")
-                        .withBodyFile("ui/index.html")
-                )
-        )
-
-        server.stubFor(
-            get(urlPathMatching("$UI_ASSETS_PREFIX/.*")).atPriority(UI)
-                .willReturn(
-                    aResponse()
-                        .withHeader("Cache-Control", "no-store")
-                        .withTransformerParameter("pathPrefix", "ui/assets")
-                        .withBodyFile("ui/assets/styles.css")
-                )
-        )
-
-        server.stubFor(
-            get(urlEqualTo("$UI_ASSETS_PREFIX/app.js")).atPriority(UI)
-                .willReturn(
-                    aResponse()
-                        .withHeader("Content-Type", "application/javascript; charset=utf-8")
-                        .withHeader("Cache-Control", "public, max-age=31536000, immutable")
-                        .withBodyFile("ui/assets/app.js")
-                )
-        )
-
     }
 }

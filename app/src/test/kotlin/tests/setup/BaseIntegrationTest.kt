@@ -143,19 +143,6 @@ abstract class BaseIntegrationTest {
         }
     }
 
-    /**
-     * Make a proxied call to upstream service
-     */
-    protected fun call(sessionId: String?, endpoint: String): Response {
-        val req = Request.Builder()
-            .url("${proxyBaseUrl()}$endpoint")
-            .addHeader(X_MOCK_TARGET_SERVICE, upstreamServiceName)
-            .apply { if (sessionId != null) addHeader(X_MOCK_SESSION_ID, sessionId) }
-            .build()
-        return http.newCall(req).execute()
-    }
-
-    protected fun proxyBaseUrl(): String = "http://localhost:${proxy.port()}"
     protected fun upstreamBaseUrl(): String = "http://localhost:${upstream.port()}"
     protected fun apiBaseUrl(): String = "http://localhost:${Env.int(EnvVar.KtorApiPort)}"
 

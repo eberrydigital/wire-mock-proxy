@@ -6,10 +6,10 @@ import com.github.tomakehurst.wiremock.http.HttpHeaders
 import com.github.tomakehurst.wiremock.http.Response
 import se.strawberry.common.Headers
 import se.strawberry.common.MetadataKeys
-import se.strawberry.domain.stub.CreateStubRequest
+import se.strawberry.api.models.stub.CreateStubRequest
 import se.strawberry.helpers.SessionHelper
 import se.strawberry.service.wiremock.WireMockClient
-import se.strawberry.stubs.dto.StubBuilder
+import se.strawberry.wiremock.StubBuilder
 
 
 class StubServiceImpl(

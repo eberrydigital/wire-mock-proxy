@@ -13,9 +13,6 @@ sealed class EnvVar<T>(val key: String, val default: T? = null) {
     data object KtorApiPort : EnvVar<Int>("KTOR_API_PORT", 8081)
     data object HostAddress : EnvVar<String>("HOST_ADDRESS", "0.0.0.0")
 
-    // WireMock configuration
-    data object WireMockFilesDir : EnvVar<String>("WIREMOCK_FILES_DIR", null)
-
     // Proxy configuration
     data object DynAllowedPorts : EnvVar<String>("DYN_ALLOWED_PORTS", "80,443")
     data object ServiceMap : EnvVar<String>("SERVICE_MAP")

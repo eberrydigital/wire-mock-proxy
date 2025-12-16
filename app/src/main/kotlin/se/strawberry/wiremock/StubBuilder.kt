@@ -1,53 +1,40 @@
-package se.strawberry.stubs.dto
+package se.strawberry.wiremock
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.github.tomakehurst.wiremock.client.MappingBuilder
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder
-import com.github.tomakehurst.wiremock.client.WireMock.any
-import com.github.tomakehurst.wiremock.client.WireMock.containing
-import com.github.tomakehurst.wiremock.client.WireMock.delete
-import com.github.tomakehurst.wiremock.client.WireMock.equalTo
-import com.github.tomakehurst.wiremock.client.WireMock.equalToJson
-import com.github.tomakehurst.wiremock.client.WireMock.get
-import com.github.tomakehurst.wiremock.client.WireMock.head
-import com.github.tomakehurst.wiremock.client.WireMock.matching
-import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
-import com.github.tomakehurst.wiremock.client.WireMock.options
-import com.github.tomakehurst.wiremock.client.WireMock.patch
-import com.github.tomakehurst.wiremock.client.WireMock.post
-import com.github.tomakehurst.wiremock.client.WireMock.put
-import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
-import com.github.tomakehurst.wiremock.client.WireMock.urlMatching
+import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.common.Metadata
 import com.github.tomakehurst.wiremock.extension.Parameters
 import com.github.tomakehurst.wiremock.matching.UrlPattern
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
-import se.strawberry.common.Headers.X_MOCK_TARGET_SERVICE
+import se.strawberry.api.models.stub.BodyMatchMode
+import se.strawberry.api.models.stub.BodyMatcherType
+import se.strawberry.api.models.stub.CreateStubRequest
+import se.strawberry.api.models.stub.HeaderMatchType
+import se.strawberry.api.models.stub.ReqMatchMethods
+import se.strawberry.api.models.stub.RespMode
+import se.strawberry.api.models.stub.UrlMatchType
+import se.strawberry.common.Headers
 import se.strawberry.common.Json
 import se.strawberry.common.MatcherNames
 import se.strawberry.common.MetadataKeys
 import se.strawberry.common.TemplateNames
-import se.strawberry.domain.stub.BodyMatchMode
-import se.strawberry.domain.stub.BodyMatcherType
-import se.strawberry.domain.stub.CreateStubRequest
-import se.strawberry.domain.stub.HeaderMatchType
-import se.strawberry.domain.stub.ReqMatchMethods
-import se.strawberry.domain.stub.RespMode
-import se.strawberry.domain.stub.UrlMatchType
 
 object StubBuilder {
     private val mapper = Json.mapper
 
     fun buildStubMapping(dto: CreateStubRequest): StubMapping {
         val mappingBuilder = when (dto.request.url.type) {
-            UrlMatchType.EXACT -> requestMatching(method = dto.request.method, url = urlEqualTo(dto.request.url.value))
-            UrlMatchType.LOOSENED -> requestMatching(method = dto.request.method, url = urlMatching(dto.request.url.value))
+            UrlMatchType.EXACT -> requestMatching(method = dto.request.method, url = WireMock.urlEqualTo(dto.request.url.value))
+            UrlMatchType.LOOSENED -> requestMatching(method = dto.request.method, url = WireMock.urlMatching(dto.request.url.value))
         }
 
         dto.request.headers.forEach { (name, headerMatch) ->
             val headerValue = when (headerMatch.type) {
-                HeaderMatchType.EQUAL_TO -> equalTo(headerMatch.value)
-                HeaderMatchType.MATCHES -> matching(headerMatch.value)
-                HeaderMatchType.CONTAINS -> containing(headerMatch.value)
+                HeaderMatchType.EQUAL_TO -> WireMock.equalTo(headerMatch.value)
+                HeaderMatchType.MATCHES -> WireMock.matching(headerMatch.value)
+                HeaderMatchType.CONTAINS -> WireMock.containing(headerMatch.value)
             }
             mappingBuilder.withHeader(name, headerValue)
         }
@@ -56,17 +43,17 @@ object StubBuilder {
             when (bodyMatch.mode) {
                 BodyMatchMode.JSON -> bodyMatch.matchers.forEach { matcher ->
                     when (matcher.type) {
-                        BodyMatcherType.JSON_PATH -> mappingBuilder.withRequestBody(matchingJsonPath(matcher.expr ?: "$"))
+                        BodyMatcherType.JSON_PATH -> mappingBuilder.withRequestBody(WireMock.matchingJsonPath(matcher.expr ?: "$"))
 
                         BodyMatcherType.EQUAL_TO_JSON -> {
                             val jsonNode = when (val v = matcher.value) {
-                                is com.fasterxml.jackson.databind.JsonNode -> v
+                                is JsonNode -> v
                                 is String -> mapper.readTree(v)
                                 null -> mapper.nullNode()
                                 else -> mapper.valueToTree(v)
                             }
                             mappingBuilder.withRequestBody(
-                                equalToJson(
+                                WireMock.equalToJson(
                                     jsonNode.toString(),
                                     matcher.ignoreArrayOrder ?: true,
                                     matcher.ignoreExtraElements ?: true
@@ -74,15 +61,15 @@ object StubBuilder {
                             )
                         }
 
-                        BodyMatcherType.MATCHES -> mappingBuilder.withRequestBody(matching(matcher.value.toString()))
-                        BodyMatcherType.CONTAINS -> mappingBuilder.withRequestBody(containing(matcher.value.toString()))
+                        BodyMatcherType.MATCHES -> mappingBuilder.withRequestBody(WireMock.matching(matcher.value.toString()))
+                        BodyMatcherType.CONTAINS -> mappingBuilder.withRequestBody(WireMock.containing(matcher.value.toString()))
                     }
                 }
 
                 BodyMatchMode.TEXT -> bodyMatch.matchers.forEach { matcher ->
                     when (matcher.type) {
-                        BodyMatcherType.MATCHES -> mappingBuilder.withRequestBody(matching(matcher.value.toString()))
-                        BodyMatcherType.CONTAINS -> mappingBuilder.withRequestBody(containing(matcher.value.toString()))
+                        BodyMatcherType.MATCHES -> mappingBuilder.withRequestBody(WireMock.matching(matcher.value.toString()))
+                        BodyMatcherType.CONTAINS -> mappingBuilder.withRequestBody(WireMock.containing(matcher.value.toString()))
                         else -> {} // skip non-text matchers
                     }
                 }
@@ -107,7 +94,7 @@ object StubBuilder {
             }
 
             RespMode.PATCH_UPSTREAM -> {
-                rb.proxiedFrom("{{${TemplateNames.SERVICE_ORIGIN} name=request.headers.[$X_MOCK_TARGET_SERVICE]}}")
+                rb.proxiedFrom("{{${TemplateNames.SERVICE_ORIGIN} name=request.headers.[${Headers.X_MOCK_TARGET_SERVICE}]}}")
                 rb.withTransformerParameter("patch", mapper.valueToTree(dto.response.patch))
             }
         }
@@ -133,14 +120,13 @@ object StubBuilder {
 
     private fun requestMatching(method: ReqMatchMethods, url: UrlPattern): MappingBuilder =
         when (method) {
-            ReqMatchMethods.GET -> get(url)
-            ReqMatchMethods.POST -> post(url)
-            ReqMatchMethods.PUT -> put(url)
-            ReqMatchMethods.PATCH -> patch(url)
-            ReqMatchMethods.DELETE -> delete(url)
-            ReqMatchMethods.HEAD -> head(url)
-            ReqMatchMethods.OPTIONS -> options(url)
-            ReqMatchMethods.ANY -> any(url)
+            ReqMatchMethods.GET -> WireMock.get(url)
+            ReqMatchMethods.POST -> WireMock.post(url)
+            ReqMatchMethods.PUT -> WireMock.put(url)
+            ReqMatchMethods.PATCH -> WireMock.patch(url)
+            ReqMatchMethods.DELETE -> WireMock.delete(url)
+            ReqMatchMethods.HEAD -> WireMock.head(url)
+            ReqMatchMethods.OPTIONS -> WireMock.options(url)
+            ReqMatchMethods.ANY -> WireMock.any(url)
         }
 }
-

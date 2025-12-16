@@ -1,6 +1,13 @@
 package stubs
 
-import se.strawberry.domain.stub.*
+import se.strawberry.api.models.stub.CreateStubRequest
+import se.strawberry.api.models.stub.Ephemeral
+import se.strawberry.api.models.stub.ReqMatch
+import se.strawberry.api.models.stub.ReqMatchMethods
+import se.strawberry.api.models.stub.RespDef
+import se.strawberry.api.models.stub.RespMode
+import se.strawberry.api.models.stub.UrlMatch
+import se.strawberry.api.models.stub.UrlMatchType
 
 object Stubs {
 

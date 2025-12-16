@@ -6,11 +6,19 @@ import com.github.tomakehurst.wiremock.stubbing.StubMapping
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.*
 import org.junit.jupiter.api.Test
+import se.strawberry.api.models.stub.CreateStubRequest
+import se.strawberry.api.models.stub.Ephemeral
+import se.strawberry.api.models.stub.ReqMatch
+import se.strawberry.api.models.stub.ReqMatchMethods
+import se.strawberry.api.models.stub.RespDef
+import se.strawberry.api.models.stub.RespMode
+import se.strawberry.api.models.stub.UrlMatch
+import se.strawberry.api.models.stub.UrlMatchType
 import se.strawberry.common.Headers
 import se.strawberry.common.Json
-import se.strawberry.domain.stub.*
 import se.strawberry.service.stub.StubServiceImpl
 import se.strawberry.service.wiremock.WireMockClient
+import se.strawberry.wiremock.StubBuilder
 
 class StubServiceImplTest {
 
@@ -68,8 +76,8 @@ class StubServiceImplTest {
         val service = StubServiceImpl(mapper, client)
 
         // Arrange: add two stubs
-        client.addStub(se.strawberry.stubs.dto.StubBuilder.buildStubMapping(sampleDto("/a")))
-        client.addStub(se.strawberry.stubs.dto.StubBuilder.buildStubMapping(sampleDto("/b")))
+        client.addStub(StubBuilder.buildStubMapping(sampleDto("/a")))
+        client.addStub(StubBuilder.buildStubMapping(sampleDto("/b")))
 
         val resp = service.list()
 
@@ -85,7 +93,7 @@ class StubServiceImplTest {
         val client = FakeWireMockClient()
         val service = StubServiceImpl(mapper, client)
 
-        val stub = se.strawberry.stubs.dto.StubBuilder.buildStubMapping(sampleDto("/x"))
+        val stub = StubBuilder.buildStubMapping(sampleDto("/x"))
         client.addStub(stub)
 
         val resp = service.delete(stub.id.toString())
