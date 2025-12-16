@@ -6,14 +6,127 @@ The idea of this tool is to provide user with the ability to:
 - based on recorded traffic, user can create stubs to mock specific endpoints.
 - we believe that it will be useful for testing and debugging purposes, allowing users to inspect and manipulate traffic between clients and services.
 
+## Core Concepts
+### Session
+
+A session represents an isolated proxying context:
+- All traffic is associated with exactly one session
+- Stubs are scoped to a session
+- Sessions have a limited lifetime
+- Sessions can be ACTIVE, CLOSED, or EXPIRED
+
+### Traffic
+
+Traffic consists of:
+
+- Full HTTP request and response data
+- Metadata (timestamp, duration, status, stubbed vs proxied)
+- Associated session and target service
+
+Traffic is:
+
+- Captured automatically
+- Streamed in real time
+- Persisted for later inspection
+
+### Stub
+A stub defines how specific requests should be intercepted and mocked:
+
+- Scoped to a session
+- Matches requests based on method, path, headers, body, etc.
+- Returns a predefined response
+- May be ephemeral (TTL and/or limited uses)
+- Has priority
+- Is persisted and survives restarts
+
+## Persistence Requirements
+### DynamoDB Tables
+
+#### sessions
+
+- PK: sessionId
+- Attributes:
+  - name
+  - owner
+  - status (ACTIVE, CLOSED, EXPIRED)
+  - createdAt
+  - expiresAt
+  - purgeAt (TTL, createdAt + 48h)
+
+#### proxy-traffic
+
+- PK: sessionId
+- SK: time-based sort key
+- Attributes:
+  - request data (method, path, headers, body)
+  - response data (status, headers, body)
+  - duration
+  - target service
+  - stubbed flag
+  - purgeAt (TTL)
+
+#### stubs
+
+- PK: sessionId
+- SK: stubId
+- Attributes:
+  - status (ACTIVE, DISABLED, EXPIRED, EXHAUSTED)
+  - priority
+  - ttl / expiresAt
+  - usesLeft
+  - mappingJson (WireMock mapping)
+  - createdAt
+  - updatedAt
+  - purgeAt (TTL)
+
+
+## Session Lifecycle Rules
+
+- Default session TTL: 24 hours
+- After expiration:
+- Session becomes EXPIRED
+- No new proxy traffic is accepted
+- Traffic and stubs are read-only
+- After 48 hours total:
+- All session-related data is removed via DynamoDB TTL
+
+## Proxying Rules
+
+Client requests must include headers:
+
+- X-Mock-Target-Service
+
+- X-Mock-Session-Id
+
+The proxy must:
+
+- Validate that the target service exists in SERVICE_MAP
+
+- Validate that the session exists and is ACTIVE
+
+- Forward the request to the correct upstream service
+
+- Capture request and response
+
+- Publish traffic events in real time
+
+## Service Map
+
+Provided via environment variable SERVICE_MAP
+
+Format:
+```payment-api=https://payment.prod.company.com,user-api=https://users.prod.company.com```
+Proxy uses this map to route requests dynamically
+
+
 ## Technical Requirements
 Key points:
 - API is implemented as KTOR
-- DB persistence for storing and managing sessions and traffic (tables: sessions #sessionId, proxy-traffic #sessionsId)
+- DB persistence for storing and managing sessions, traffic, and stubs (stubs will implemented almost in the last stage, before that in-memory stubs can be used for development and testing)
 - WebSocket support is not implemented, but it is necessary so that Frontend could show the proxying traffic within a session in real time.
 - WireMock 3 is used as an embedded server for stubbing and proxying.
 - KTOR is responsible for routing, session management, WireMock integrations, and business logic.
-- We need to decide whether we should store stubs in the DB. If yes, we need to decide on the schema and implement the necessary logic to persist and retrieve stubs.
+- Persistent stubs PR: sessionId, SK: stubId. Attributes: status (ACTIVE/DISABLED/EXPIRED/EXHAUSTED), createdAt, updatedAt, expiresAt, usesLeft (nullable), priority, mappingJson (WireMock mapping JSON as the “rendered” truth), purgeAt (epoch seconds) = session.createdAt + 48h (or stub created + 48h). Storing mappingJson is pragmatic: you don’t have to perfectly re-create WireMock mappings from a custom model later. 
 - The project is under development, so backward compatibility is not a concern at this point.
 - It is agreed that user will provide service map which consists of the name of the service and its target URL. The proxy will use this map to forward traffic to the correct target service There can be multiple services defined in the map.
 - TTL for sessions should be 24 hours. After that, the sessions should be expired. The related data should be available for the next 48 hours.
@@ -289,3 +402,5 @@ When testing is done:
    - Removes headers from browser extension
 
 **Total Time**: ~20 minutes to thoroughly test error handling that would be difficult to reproduce with the real API
+
+
