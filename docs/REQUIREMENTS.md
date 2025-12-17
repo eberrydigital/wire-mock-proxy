@@ -157,6 +157,15 @@ The Wire Mock Proxy service is deployed and configured with:
 - The backend service running and accessible
 - The frontend application deployed and connected to the backend
 
+### Expected number of users
+- 20 users per month
+
+### Expected number of sessions
+- 100 sessions per month
+
+### Expected number of stubs
+- up to 10000 stubs per month
+
 ---
 
 ### User Journey: From Login to Testing

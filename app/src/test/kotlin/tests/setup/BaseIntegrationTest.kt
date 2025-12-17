@@ -6,6 +6,8 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import io.github.cdimascio.dotenv.dotenv
 import io.ktor.server.engine.EmbeddedServer
 import io.ktor.server.netty.NettyApplicationEngine
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
@@ -34,6 +36,7 @@ import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension
 import org.junit.jupiter.api.extension.ExtendWith
 import se.strawberry.repository.RepositoryConstants.DYNAMO.SESSION_TABLE_NAME
 import se.strawberry.repository.RepositoryConstants.DYNAMO.TRAFFIC_TABLE_NAME
+import se.strawberry.wiremock.listeners.TrafficCaptureListener
 import java.util.concurrent.TimeUnit
 
 /**
@@ -108,11 +111,15 @@ abstract class BaseIntegrationTest {
         env.set(EnvVar.ServiceMap.key, "$upstreamServiceName=${upstreamBaseUrl()}")
 
         // Start proxy (WireMock ingress)
-        proxy = ServerBootstrap.start()
-
-        // Start Ktor API
         val cfg = AppConfigLoader.load()
         val deps = buildDependencies(cfg)
+        val appScope = CoroutineScope(Dispatchers.Default)
+        deps.trafficPersister.start(appScope)
+
+        val trafficListener = TrafficCaptureListener(deps.trafficPersister)
+        proxy = ServerBootstrap.start(trafficListener)
+
+        // Start Ktor API
         ktorApp = KtorBootstrap.start(cfg, deps)
     }
 

@@ -35,6 +35,62 @@ object DynamoBootstrap {
         waitUntilActive(dynamo, tableName)
     }
 
+    fun ensureTrafficTable(
+        dynamo: DynamoDbClient,
+        tableName: String,
+    ) {
+        if (tableExists(dynamo, tableName)) {
+            return
+        }
+
+        dynamo.createTable(
+            CreateTableRequest.builder()
+                .tableName(tableName)
+                // Attribute definitions for PK, SK, and GSI PK
+                .attributeDefinitions(
+                    AttributeDefinition.builder()
+                        .attributeName("sessionId")
+                        .attributeType(ScalarAttributeType.S)
+                        .build(),
+                    AttributeDefinition.builder()
+                        .attributeName("timestamp")
+                        .attributeType(ScalarAttributeType.N)
+                        .build(),
+                    AttributeDefinition.builder()
+                        .attributeName("id")
+                        .attributeType(ScalarAttributeType.S)
+                        .build()
+                )
+                .keySchema(
+                    KeySchemaElement.builder()
+                        .attributeName("sessionId")
+                        .keyType(KeyType.HASH)
+                        .build(),
+                    KeySchemaElement.builder()
+                        .attributeName("timestamp")
+                        .keyType(KeyType.RANGE)
+                        .build()
+                )
+                // Global Secondary Index on 'id'
+                .globalSecondaryIndexes(
+                    GlobalSecondaryIndex.builder()
+                        .indexName("id-index")
+                        .keySchema(
+                            KeySchemaElement.builder()
+                                .attributeName("id")
+                                .keyType(KeyType.HASH)
+                                .build()
+                        )
+                        .projection(Projection.builder().projectionType(ProjectionType.ALL).build())
+                        .build()
+                )
+                .billingMode(BillingMode.PAY_PER_REQUEST)
+                .build()
+        )
+
+        waitUntilActive(dynamo, tableName)
+    }
+
     private fun tableExists(dynamo: DynamoDbClient, tableName: String): Boolean =
         try {
             dynamo.describeTable(

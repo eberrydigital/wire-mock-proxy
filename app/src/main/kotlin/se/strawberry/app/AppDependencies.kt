@@ -13,28 +13,37 @@ import se.strawberry.service.wiremock.ServerWireMockClient
 import se.strawberry.service.wiremock.WireMockClient
 import se.strawberry.config.AppConfig
 
+import se.strawberry.repository.traffic.RecordedRequestRepository
+import se.strawberry.repository.traffic.DynamoDbRecordedRequestRepository
+import se.strawberry.service.traffic.TrafficPersister
+
 data class AppDependencies(
     val mapper: ObjectMapper,
     val wireMockClient: WireMockClient,
     val stubService: StubService,
     val requestService: RequestService,
-    val sessionRepository: SessionRepository
+    val sessionRepository: SessionRepository,
+    val trafficPersister: TrafficPersister
 )
 
 fun buildDependencies(cfg: AppConfig): AppDependencies {
     val mapper = Json.mapper
     val wireMockClient: WireMockClient = ServerWireMockClient()
     val stubService: StubService = StubServiceImpl(mapper, wireMockClient)
-    val requestService: RequestService = RequestServiceImpl(mapper, wireMockClient)
 
     val dynamo = DynamoClientFactory.create(cfg.dynamo)
     val sessionRepository: SessionRepository = DynamoDbSessionRepository(dynamo)
+    val recordedRequestRepository: RecordedRequestRepository = DynamoDbRecordedRequestRepository(dynamo)
+    val trafficPersister = TrafficPersister(recordedRequestRepository)
+    
+    val requestService: RequestService = RequestServiceImpl(mapper, recordedRequestRepository)
 
     return AppDependencies(
         mapper = mapper,
         wireMockClient = wireMockClient,
         stubService = stubService,
         requestService = requestService,
-        sessionRepository = sessionRepository
+        sessionRepository = sessionRepository,
+        trafficPersister = trafficPersister
     )
 }

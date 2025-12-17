@@ -4,6 +4,7 @@ package se.strawberry.app
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock.*
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
+import com.github.tomakehurst.wiremock.extension.ServeEventListener
 import org.slf4j.LoggerFactory
 import se.strawberry.admin.ServerRef
 import se.strawberry.common.Headers.X_MOCK_TARGET_SERVICE
@@ -24,13 +25,14 @@ object ServerBootstrap {
     private val log = LoggerFactory.getLogger(ServerBootstrap::class.java)
     val mapper = Json.mapper
 
-    fun start(): WireMockServer {
+    fun start(trafficListener: ServeEventListener): WireMockServer {
         val cfg: AppConfig = AppConfigLoader.load()
         val server = WireMockServer(
             options()
                 .port(cfg.wireMockServerPort)
                 .bindAddress(cfg.hostAddress)
                 .templatingEnabled(true)
+                .disableRequestJournal() // Disable in-memory journal to save memory
                 // 1) TtlGuardMatcher — TTL (time to live) stub logic.
                 // 2) EphemeralServeEventListener — decrement uses/TTL, remove stubs if needed.
                 // 3) ServiceTemplateHelpers — helper functions for response templating.
@@ -38,6 +40,7 @@ object ServerBootstrap {
                     DynamicRoutingGuard(cfg.services, cfg.allowedPorts),
                     TtlGuardMatcher(),
                     EphemeralServeEventListener(),
+                    trafficListener,
                     ServiceTemplateHelpers(cfg.services)
                 )
                 .templatingEnabled(true)

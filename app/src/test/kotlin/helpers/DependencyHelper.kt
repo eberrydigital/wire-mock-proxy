@@ -10,7 +10,8 @@ object DependencyHelper {
             wireMockClient = mockk(),
             stubService = mockk(),
             requestService = mockk(),
-            sessionRepository = mockk()
+            sessionRepository = mockk(),
+            trafficPersister = mockk()
         )
     }
 }

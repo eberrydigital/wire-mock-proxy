@@ -16,6 +16,8 @@ interface RecordedRequestRepository {
         val responseHeaders: Map<String, String>,
         val responseBody: String?,
         val timestamp: Long,
+        val duration: Long,
+        val stubbed: Boolean
     )
 
     fun save(rr: RecordedRequest): Boolean

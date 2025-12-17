@@ -6,6 +6,8 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import io.github.cdimascio.dotenv.dotenv
 import io.ktor.server.engine.EmbeddedServer
 import io.ktor.server.netty.NettyApplicationEngine
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
@@ -21,6 +23,7 @@ import se.strawberry.app.buildDependencies
 import se.strawberry.config.AppConfigLoader
 import se.strawberry.config.Env
 import se.strawberry.config.EnvVar
+import se.strawberry.wiremock.listeners.TrafficCaptureListener
 import uk.org.webcompere.systemstubs.environment.EnvironmentVariables
 import uk.org.webcompere.systemstubs.jupiter.SystemStub
 import java.net.ServerSocket
@@ -61,11 +64,15 @@ abstract class BaseTest {
         env.set(EnvVar.ServiceMap.key, "$upstreamServiceName=${upstreamBaseUrl()}")
 
         // Start proxy (WireMock ingress)
-        proxy = ServerBootstrap.start()
-
-        // Start Ktor API
         val cfg = AppConfigLoader.load()
         val deps = buildDependencies(cfg)
+        val appScope = CoroutineScope(Dispatchers.Default)
+        deps.trafficPersister.start(appScope)
+
+        val trafficListener = TrafficCaptureListener(deps.trafficPersister)
+        proxy = ServerBootstrap.start(trafficListener)
+
+        // Start Ktor API
         ktorApp = KtorBootstrap.start(cfg, deps)
     }
 
