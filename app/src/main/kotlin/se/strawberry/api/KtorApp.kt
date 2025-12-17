@@ -8,6 +8,9 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.util.*
+import io.ktor.server.websocket.*
+import io.ktor.websocket.*
+import kotlinx.coroutines.channels.consumeEach
 import se.strawberry.api.models.health.HealthResponse
 import se.strawberry.api.models.sessions.SessionsCreateRequestModel
 import se.strawberry.api.models.sessions.SessionsCloseRequestModel
@@ -31,6 +34,12 @@ fun Application.dependencies(): AppDependencies = attributes[DependenciesKey]
 
 fun Application.mockGateway() {
     install(ContentNegotiation) { jackson() }
+    install(WebSockets) {
+        pingPeriodMillis = 15_000
+        timeoutMillis = 15_000
+        maxFrameSize = Long.MAX_VALUE
+        masking = false
+    }
     val dependencies = dependencies()
 
     routing {
@@ -118,6 +127,34 @@ fun Application.mockGateway() {
                 call.response.header("Content-Type", "application/x-ndjson")
                 call.response.header("Content-Disposition", "attachment; filename=\"requests.jsonl\"")
                 call.respondText(ndjson, ContentType.parse("application/x-ndjson"), HttpStatusCode.OK)
+            }
+        }
+        
+        // Traffic WebSocket
+        webSocket(Endpoints.Paths.WS_TRAFFIC) {
+            val id = UUID.randomUUID().toString()
+            val broadcastService = dependencies.trafficBroadcastService
+            try {
+                // Register session
+                broadcastService.addSession(id) { json ->
+                    send(Frame.Text(json))
+                }
+                
+                // Handle incoming messages (e.g., filter updates)
+                incoming.consumeEach { frame ->
+                    if (frame is Frame.Text) {
+                        val text = frame.readText()
+                        try {
+                            val node = dependencies.mapper.readTree(text)
+                            val sessionId = node.get("sessionId")?.asText()?.takeIf { it.isNotBlank() }
+                            broadcastService.updateFilter(id, sessionId)
+                        } catch (e: Exception) {
+                            send(Frame.Text("""{"error":"invalid_filter_json"}"""))
+                        }
+                    }
+                }
+            } finally {
+                broadcastService.removeSession(id)
             }
         }
 

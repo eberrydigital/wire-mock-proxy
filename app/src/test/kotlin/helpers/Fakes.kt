@@ -1,7 +1,6 @@
 package helpers
 
 import se.strawberry.repository.stub.StubRepository
-import com.github.tomakehurst.wiremock.stubbing.ServeEvent
 
 class FakeStubRepository : StubRepository {
     val stubs = mutableListOf<StubRepository.Stub>()

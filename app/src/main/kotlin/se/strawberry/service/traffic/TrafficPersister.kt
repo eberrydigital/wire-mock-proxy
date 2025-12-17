@@ -11,11 +11,11 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 class TrafficPersister(
     private val repository: RecordedRequestRepository,
-    bufferSize: Int = 1000
+    private val broadcaster: TrafficBroadcastService? = null
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
     // Channel to buffer requests
-    val channel = Channel<RecordedRequest>(bufferSize)
+    val channel = Channel<RecordedRequest>(Channel.UNLIMITED)
     private val running = AtomicBoolean(false)
 
     fun start(scope: CoroutineScope) {
@@ -24,10 +24,21 @@ class TrafficPersister(
         scope.launch(Dispatchers.IO) {
             log.info("TrafficPersister started")
             for (request in channel) {
-                try {
-                    repository.save(request)
-                } catch (e: Exception) {
-                    log.error("Failed to persist request ${request.id}", e)
+                // Launch independent jobs to avoid one blocking the other (e.g., DB retries vs WebSocket)
+                launch {
+                    try {
+                        repository.save(request)
+                    } catch (e: Exception) {
+                        log.error("Failed to persist request ${request.id}", e)
+                    }
+                }
+                
+                launch {
+                    try {
+                        broadcaster?.broadcast(request)
+                    } catch (e: Exception) {
+                        log.error("Failed to broadcast request ${request.id}", e)
+                    }
                 }
             }
         }

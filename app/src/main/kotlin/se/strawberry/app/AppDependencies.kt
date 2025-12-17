@@ -25,7 +25,8 @@ data class AppDependencies(
     val stubService: StubService,
     val requestService: RequestService,
     val sessionRepository: SessionRepository,
-    val trafficPersister: TrafficPersister
+    val trafficPersister: TrafficPersister,
+    val trafficBroadcastService: se.strawberry.service.traffic.TrafficBroadcastService
 )
 
 fun buildDependencies(cfg: AppConfig): AppDependencies {
@@ -35,7 +36,9 @@ fun buildDependencies(cfg: AppConfig): AppDependencies {
 
     val sessionRepository: SessionRepository = DynamoDbSessionRepository(dynamo)
     val recordedRequestRepository: RecordedRequestRepository = DynamoDbRecordedRequestRepository(dynamo)
-    val trafficPersister = TrafficPersister(recordedRequestRepository)
+    
+    val trafficBroadcaster = se.strawberry.service.traffic.WebSocketTrafficBroadcaster(mapper)
+    val trafficPersister = TrafficPersister(recordedRequestRepository, trafficBroadcaster)
     val stubRepository: StubRepository = DynamoDbStubRepository(dynamo)
 
     val stubService: StubService = StubServiceImpl(mapper, wireMockClient, stubRepository)
@@ -47,6 +50,7 @@ fun buildDependencies(cfg: AppConfig): AppDependencies {
         stubService = stubService,
         requestService = requestService,
         sessionRepository = sessionRepository,
-        trafficPersister = trafficPersister
+        trafficPersister = trafficPersister,
+        trafficBroadcastService = trafficBroadcaster
     )
 }

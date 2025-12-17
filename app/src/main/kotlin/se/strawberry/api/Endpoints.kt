@@ -7,5 +7,6 @@ object Endpoints {
         const val STUBS = "$BASE/stubs"
         const val TRAFFIC = "$BASE/traffic"
         const val SESSIONS = "$BASE/sessions"
+        const val WS_TRAFFIC = "$BASE/ws/traffic"
     }
 }

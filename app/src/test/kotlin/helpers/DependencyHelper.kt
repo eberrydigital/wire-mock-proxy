@@ -11,7 +11,8 @@ object DependencyHelper {
             stubService = mockk(),
             requestService = mockk(),
             sessionRepository = mockk(),
-            trafficPersister = mockk()
+            trafficPersister = mockk(),
+            trafficBroadcastService = mockk()
         )
     }
 }

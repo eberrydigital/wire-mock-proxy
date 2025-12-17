@@ -1,12 +1,11 @@
 package se.strawberry.repository.traffic
 
+import org.slf4j.LoggerFactory
 import se.strawberry.repository.traffic.RecordedRequestRepository.RecordedRequest
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue
-import software.amazon.awssdk.services.dynamodb.model.GetItemRequest
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest
 import software.amazon.awssdk.services.dynamodb.model.QueryRequest
-import org.slf4j.LoggerFactory
 
 class DynamoDbRecordedRequestRepository(
     private val dynamoDb: DynamoDbClient,
