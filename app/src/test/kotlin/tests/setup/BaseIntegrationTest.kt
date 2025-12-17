@@ -4,14 +4,13 @@ import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.common.Slf4jNotifier
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import io.github.cdimascio.dotenv.dotenv
-import io.ktor.server.engine.EmbeddedServer
-import io.ktor.server.netty.NettyApplicationEngine
+import io.ktor.server.engine.*
+import io.ktor.server.netty.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.Response
 import org.junit.jupiter.api.*
+import org.junit.jupiter.api.extension.ExtendWith
 import org.testcontainers.containers.localstack.LocalStackContainer
 import org.testcontainers.containers.localstack.LocalStackContainer.Service
 import org.testcontainers.junit.jupiter.Container
@@ -20,11 +19,12 @@ import org.testcontainers.utility.DockerImageName
 import se.strawberry.app.KtorBootstrap
 import se.strawberry.app.ServerBootstrap
 import se.strawberry.app.buildDependencies
-import se.strawberry.common.Headers.X_MOCK_SESSION_ID
-import se.strawberry.common.Headers.X_MOCK_TARGET_SERVICE
 import se.strawberry.config.AppConfigLoader
 import se.strawberry.config.Env
 import se.strawberry.config.EnvVar
+import se.strawberry.repository.RepositoryConstants.DYNAMO.SESSION_TABLE_NAME
+import se.strawberry.repository.RepositoryConstants.DYNAMO.TRAFFIC_TABLE_NAME
+import se.strawberry.wiremock.listeners.TrafficCaptureListener
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
 import software.amazon.awssdk.regions.Region
@@ -33,10 +33,6 @@ import software.amazon.awssdk.services.dynamodb.model.*
 import uk.org.webcompere.systemstubs.environment.EnvironmentVariables
 import uk.org.webcompere.systemstubs.jupiter.SystemStub
 import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension
-import org.junit.jupiter.api.extension.ExtendWith
-import se.strawberry.repository.RepositoryConstants.DYNAMO.SESSION_TABLE_NAME
-import se.strawberry.repository.RepositoryConstants.DYNAMO.TRAFFIC_TABLE_NAME
-import se.strawberry.wiremock.listeners.TrafficCaptureListener
 import java.util.concurrent.TimeUnit
 
 /**

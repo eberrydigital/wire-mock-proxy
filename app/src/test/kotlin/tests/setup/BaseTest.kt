@@ -4,8 +4,8 @@ import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.common.Slf4jNotifier
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
 import io.github.cdimascio.dotenv.dotenv
-import io.ktor.server.engine.EmbeddedServer
-import io.ktor.server.netty.NettyApplicationEngine
+import io.ktor.server.engine.*
+import io.ktor.server.netty.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import okhttp3.OkHttpClient
@@ -15,10 +15,9 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
-import se.strawberry.app.ServerBootstrap
-import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension
 import org.junit.jupiter.api.extension.ExtendWith
 import se.strawberry.app.KtorBootstrap
+import se.strawberry.app.ServerBootstrap
 import se.strawberry.app.buildDependencies
 import se.strawberry.config.AppConfigLoader
 import se.strawberry.config.Env
@@ -26,7 +25,7 @@ import se.strawberry.config.EnvVar
 import se.strawberry.wiremock.listeners.TrafficCaptureListener
 import uk.org.webcompere.systemstubs.environment.EnvironmentVariables
 import uk.org.webcompere.systemstubs.jupiter.SystemStub
-import java.net.ServerSocket
+import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension
 import java.util.concurrent.TimeUnit
 
 @ExtendWith(SystemStubsExtension::class)
