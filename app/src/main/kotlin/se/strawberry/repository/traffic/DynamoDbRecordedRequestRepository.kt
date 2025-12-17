@@ -18,7 +18,7 @@ class DynamoDbRecordedRequestRepository(
 
     override fun save(rr: RecordedRequest): Boolean {
         try {
-            val item = mutableMapOf<String, AttributeValue>(
+            val item = mutableMapOf(
                 "sessionId" to s(rr.sessionId),
                 "timestamp" to n(rr.timestamp), // Sort Key
                 "id" to s(rr.id),
@@ -38,9 +38,7 @@ class DynamoDbRecordedRequestRepository(
             item["body"] = s(truncate(rr.body))
             item["responseBody"] = s(truncate(rr.responseBody))
             
-            // TTL: We don't have explicit TTL in model yet, but requirements say 48h. 
-            // We can optionally add purgeAt if the table has TTL enabled.
-            // Let's assume database handles it or we add it later. For now adhering to model.
+            //:TODO Implement time to live. TTL for Traffic instance should be TTL of session + 48H.
             
             dynamoDb.putItem(PutItemRequest.builder()
                 .tableName(tableName)

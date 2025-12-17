@@ -18,7 +18,7 @@ class DynamoDbStubRepository(
     private val log = LoggerFactory.getLogger(javaClass)
 
     override fun save(stub: Stub) {
-        val item = mutableMapOf<String, AttributeValue>(
+        val item = mutableMapOf(
             "sessionId" to s(stub.sessionId),
             "stubId" to s(stub.stubId),
             "mappingJson" to s(stub.mappingJson),

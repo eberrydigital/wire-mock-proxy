@@ -37,7 +37,7 @@ object ServerBootstrap {
                     TtlGuardMatcher(),
                     EphemeralServeEventListener(),
                     trafficListener,
-                    ServiceTemplateHelpers(cfg.services)
+                    ServiceTemplateHelpers(cfg.services),
                 )
                 .templatingEnabled(true)
         )

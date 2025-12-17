@@ -11,6 +11,7 @@ import io.ktor.util.*
 import io.ktor.server.websocket.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.channels.consumeEach
+import io.ktor.server.plugins.cors.routing.CORS
 import se.strawberry.api.models.health.HealthResponse
 import se.strawberry.api.models.sessions.SessionsCreateRequestModel
 import se.strawberry.api.models.sessions.SessionsCloseRequestModel
@@ -34,6 +35,18 @@ fun Application.dependencies(): AppDependencies = attributes[DependenciesKey]
 
 fun Application.mockGateway() {
     install(ContentNegotiation) { jackson() }
+
+    // For testing
+    install(CORS) {
+        anyHost()
+        allowHeader(HttpHeaders.ContentType)
+        allowHeader(Headers.X_MOCK_TARGET_SERVICE)
+        allowHeader(Headers.X_MOCK_SESSION_ID)
+        allowMethod(HttpMethod.Options)
+        allowMethod(HttpMethod.Put)
+        allowMethod(HttpMethod.Patch)
+        allowMethod(HttpMethod.Delete)
+    }
     install(WebSockets) {
         pingPeriodMillis = 15_000
         timeoutMillis = 15_000

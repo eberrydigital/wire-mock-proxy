@@ -73,7 +73,7 @@ object AppConfigLoader {
                 "SERVICE_MAP: entry #$idx '$p' must be 'name=url'"
             }
             val key = p.substring(0, eq).trim()
-            val url = p.substring(eq + 1).trim()
+            val url = p.substring(eq + 1).trim().removeSuffix("/")
             require(key.isNotEmpty()) { "SERVICE_MAP: empty service name in '$p'" }
             val uri = try { URI(url) } catch (e: Exception) {
                 throw IllegalArgumentException("SERVICE_MAP: invalid URL '$url' for key '$key'", e)

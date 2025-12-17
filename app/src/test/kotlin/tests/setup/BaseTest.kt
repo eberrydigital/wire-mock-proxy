@@ -10,7 +10,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.Response
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
@@ -22,10 +21,10 @@ import se.strawberry.app.buildDependencies
 import se.strawberry.config.AppConfigLoader
 import se.strawberry.config.Env
 import se.strawberry.config.EnvVar
-import se.strawberry.wiremock.listeners.TrafficCaptureListener
 import uk.org.webcompere.systemstubs.environment.EnvironmentVariables
 import uk.org.webcompere.systemstubs.jupiter.SystemStub
 import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension
+import java.net.ServerSocket
 import java.util.concurrent.TimeUnit
 
 @ExtendWith(SystemStubsExtension::class)
@@ -52,9 +51,18 @@ abstract class BaseTest {
     @BeforeEach
     fun setUp() {
         loadEnv()
+        // Override ports with random available ports to avoid conflicts with running local app
+        val wmPort = findFreePort()
+        val apiPort = findFreePort()
+        val upstreamPort = findFreePort()
+        
+        env.set(EnvVar.WireMockServerPort.key, wmPort.toString())
+        env.set(EnvVar.KtorApiPort.key, apiPort.toString())
+        env.set(EnvVar.DynAllowedPorts.key, "$upstreamPort,80,443")
+
         upstream = WireMockServer(
             options()
-                .port(443) //one fro DYN_ALLOWED_PORTS
+                .port(upstreamPort)
                 .notifier(Slf4jNotifier(false))
                 .disableRequestJournal()
         )
@@ -133,6 +141,8 @@ abstract class BaseTest {
     protected fun proxyBaseUrl(): String = "http://localhost:${proxy.port()}"
     protected fun upstreamBaseUrl(): String = "http://localhost:${upstream.port()}"
     protected fun apiBaseUrl(): String = "http://localhost:${Env.int(EnvVar.KtorApiPort)}"
+    private fun findFreePort(): Int { ServerSocket(0).use { return it.localPort } }
+
     private fun loadEnv() {
         val dotenv = dotenv {
             filename = ".env.test"

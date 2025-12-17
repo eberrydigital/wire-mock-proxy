@@ -9,8 +9,8 @@ import se.strawberry.repository.RepositoryConstants.DYNAMO.SESSION_TABLE_NAME
 sealed class EnvVar<T>(val key: String, val default: T? = null) {
 
     // Application ports and network
-    data object WireMockServerPort : EnvVar<Int>("WIREMOCK_SERVER_PORT", 8080)
-    data object KtorApiPort : EnvVar<Int>("KTOR_API_PORT", 8081)
+    data object WireMockServerPort : EnvVar<Int>("WIREMOCK_SERVER_PORT", 8222)
+    data object KtorApiPort : EnvVar<Int>("KTOR_API_PORT", 8333)
     data object HostAddress : EnvVar<String>("HOST_ADDRESS", "0.0.0.0")
 
     // Proxy configuration
