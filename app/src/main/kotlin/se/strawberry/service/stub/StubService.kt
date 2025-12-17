@@ -13,5 +13,6 @@ interface StubService {
 
     /** Delete stub by id (delegates to underlying WireMock client). */
     fun delete(id: String): Response
+    fun syncFromDb()
 }
 

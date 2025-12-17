@@ -19,6 +19,7 @@ import se.strawberry.common.Json
 import se.strawberry.service.stub.StubServiceImpl
 import se.strawberry.service.wiremock.WireMockClient
 import se.strawberry.wiremock.StubBuilder
+import helpers.FakeStubRepository
 
 class StubServiceImplTest {
 
@@ -27,7 +28,8 @@ class StubServiceImplTest {
     @Test
     fun `create should add session-scoped stub and return created payload`() {
         val client = FakeWireMockClient()
-        val service = StubServiceImpl(mapper, client)
+        val repo = FakeStubRepository()
+        val service = StubServiceImpl(mapper, client, repo)
 
         val sessionId = "s-123"
         val dto = CreateStubRequest(
@@ -61,6 +63,10 @@ class StubServiceImplTest {
         val mappingJson = mapper.writeValueAsString(added)
         assertThat(mappingJson, containsString(Headers.X_MOCK_SESSION_ID))
         assertThat(mappingJson, containsString(sessionId))
+        
+        // Verify saved to DB
+        assertThat(repo.stubs.size, equalTo(1))
+        assertThat(repo.stubs[0].sessionId, equalTo(sessionId))
 
         // Verify response payload
         val payload = resp.bodyAsString
@@ -73,7 +79,8 @@ class StubServiceImplTest {
     @Test
     fun `list should return all stubs as json`() {
         val client = FakeWireMockClient()
-        val service = StubServiceImpl(mapper, client)
+        val repo = FakeStubRepository()
+        val service = StubServiceImpl(mapper, client, repo)
 
         // Arrange: add two stubs
         client.addStub(StubBuilder.buildStubMapping(sampleDto("/a")))
@@ -91,26 +98,64 @@ class StubServiceImplTest {
     @Test
     fun `delete should remove existing stub and return 204`() {
         val client = FakeWireMockClient()
-        val service = StubServiceImpl(mapper, client)
+        val repo = FakeStubRepository()
+        val service = StubServiceImpl(mapper, client, repo)
 
-        val stub = StubBuilder.buildStubMapping(sampleDto("/x"))
-        client.addStub(stub)
+        val dto = sampleDto("/x")
+        val sessionId = "s-del"
+        val createResp = service.create(dto, sessionId) // persist to DB + Memory + Metadata
+        
+        // Extract ID from response (or we can capture it)
+        val jsonParams = mapper.readTree(createResp.bodyAsString)
+        val stubId = jsonParams.get("id").asText()
 
-        val resp = service.delete(stub.id.toString())
+        val resp = service.delete(stubId)
 
         assertThat(resp.status, equalTo(204))
         assertThat(client.stubs, empty())
+        assertThat(repo.stubs, empty())
     }
 
     @Test
     fun `delete should return 404 when stub not found`() {
         val client = FakeWireMockClient()
-        val service = StubServiceImpl(mapper, client)
+        val repo = FakeStubRepository()
+        val service = StubServiceImpl(mapper, client, repo)
 
         val resp = service.delete("does-not-exist")
 
         assertThat(resp.status, equalTo(404))
         assertThat(resp.bodyAsString, containsString("not_found"))
+    }
+
+    @Test
+    fun `delete should find stub in DB (GSI) if missing from memory and delete it`() {
+        val client = FakeWireMockClient()
+        val repo = FakeStubRepository()
+        val service = StubServiceImpl(mapper, client, repo)
+
+        // Setup: Stub exists in DB but not in WireMock (simulating restart or sync issue)
+        val sessionId = "s-ghost"
+        val stubId = "stub-ghost-1"
+        repo.save(
+            se.strawberry.repository.stub.StubRepository.Stub(
+                sessionId = sessionId,
+                stubId = stubId,
+                mappingJson = "{}",
+                createdAt = 0,
+                updatedAt = 0,
+                expiresAt = null,
+                usesLeft = null,
+                status = se.strawberry.repository.stub.StubRepository.Stub.Status.ACTIVE
+            )
+        )
+
+        // Act
+        val resp = service.delete(stubId)
+
+        // Assert
+        assertThat(resp.status, equalTo(204))
+        assertThat(repo.stubs, empty()) // Should be removed from DB
     }
 
     private fun sampleDto(path: String): CreateStubRequest =

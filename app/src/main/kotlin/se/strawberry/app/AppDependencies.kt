@@ -16,6 +16,8 @@ import se.strawberry.config.AppConfig
 import se.strawberry.repository.traffic.RecordedRequestRepository
 import se.strawberry.repository.traffic.DynamoDbRecordedRequestRepository
 import se.strawberry.service.traffic.TrafficPersister
+import se.strawberry.repository.stub.StubRepository
+import se.strawberry.repository.stub.DynamoDbStubRepository
 
 data class AppDependencies(
     val mapper: ObjectMapper,
@@ -29,13 +31,14 @@ data class AppDependencies(
 fun buildDependencies(cfg: AppConfig): AppDependencies {
     val mapper = Json.mapper
     val wireMockClient: WireMockClient = ServerWireMockClient()
-    val stubService: StubService = StubServiceImpl(mapper, wireMockClient)
-
     val dynamo = DynamoClientFactory.create(cfg.dynamo)
+
     val sessionRepository: SessionRepository = DynamoDbSessionRepository(dynamo)
     val recordedRequestRepository: RecordedRequestRepository = DynamoDbRecordedRequestRepository(dynamo)
     val trafficPersister = TrafficPersister(recordedRequestRepository)
-    
+    val stubRepository: StubRepository = DynamoDbStubRepository(dynamo)
+
+    val stubService: StubService = StubServiceImpl(mapper, wireMockClient, stubRepository)
     val requestService: RequestService = RequestServiceImpl(mapper, recordedRequestRepository)
 
     return AppDependencies(

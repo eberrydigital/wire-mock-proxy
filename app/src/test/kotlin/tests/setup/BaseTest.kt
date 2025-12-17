@@ -63,8 +63,19 @@ abstract class BaseTest {
         env.set(EnvVar.ServiceMap.key, "$upstreamServiceName=${upstreamBaseUrl()}")
 
         // Start proxy (WireMock ingress)
+        // Start proxy (WireMock ingress)
         val cfg = AppConfigLoader.load()
-        val deps = buildDependencies(cfg)
+        var deps = buildDependencies(cfg)
+        
+        // Use Fake Stub Repository for tests (avoid requiring DDB)
+        val fakeRepo = helpers.FakeStubRepository()
+        val testStubService = se.strawberry.service.stub.StubServiceImpl(
+            se.strawberry.common.Json.mapper, 
+            deps.wireMockClient, 
+            fakeRepo
+        )
+        deps = deps.copy(stubService = testStubService)
+
         val appScope = CoroutineScope(Dispatchers.Default)
         deps.trafficPersister.start(appScope)
 

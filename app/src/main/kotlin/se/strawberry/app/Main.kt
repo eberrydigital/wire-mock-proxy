@@ -5,6 +5,7 @@ import se.strawberry.infrastructure.dynamo.DynamoBootstrap
 import se.strawberry.infrastructure.dynamo.DynamoClientFactory
 import se.strawberry.repository.RepositoryConstants.DYNAMO.SESSION_TABLE_NAME
 import se.strawberry.repository.RepositoryConstants.DYNAMO.TRAFFIC_TABLE_NAME
+import se.strawberry.repository.RepositoryConstants.DYNAMO.STUB_TABLE_NAME
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import se.strawberry.wiremock.listeners.TrafficCaptureListener
@@ -21,6 +22,10 @@ fun main() {
         dynamo = dynamoClient,
         tableName = TRAFFIC_TABLE_NAME
     )
+    DynamoBootstrap.ensureStubsTable(
+        dynamo = dynamoClient,
+        tableName = STUB_TABLE_NAME
+    )
 
     val deps = buildDependencies(cfg)
     
@@ -29,6 +34,10 @@ fun main() {
 
     val trafficListener = TrafficCaptureListener(deps.trafficPersister)
     val wireMock = ServerBootstrap.start(trafficListener)
+    
+    // Sync stubs from DB to WireMock
+    deps.stubService.syncFromDb()
+
     val ktor = KtorBootstrap.start(cfg, deps)
 
     Runtime.getRuntime().addShutdownHook(Thread {

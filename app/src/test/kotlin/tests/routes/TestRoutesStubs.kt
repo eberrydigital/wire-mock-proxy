@@ -198,6 +198,10 @@ class StubsRoutesTest {
             return Response.response().status(204).build()
         }
 
+        override fun syncFromDb() {
+            // no-op for recording fake
+        }
+
         private fun json(code: Int, body: String): Response =
             Response.response()
                 .status(code)
