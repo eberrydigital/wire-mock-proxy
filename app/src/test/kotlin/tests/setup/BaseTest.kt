@@ -37,6 +37,7 @@ abstract class BaseTest {
     protected lateinit var ktorApp: EmbeddedServer<NettyApplicationEngine, NettyApplicationEngine.Configuration>
     protected lateinit var http: OkHttpClient
     protected lateinit var upstreamServiceName: String
+    protected lateinit var deps: se.strawberry.app.AppDependencies
 
     @SystemStub
     protected val env = EnvironmentVariables()
@@ -64,23 +65,29 @@ abstract class BaseTest {
 
         // Start proxy (WireMock ingress)
         // Start proxy (WireMock ingress)
+        // Start proxy (WireMock ingress)
         val cfg = AppConfigLoader.load()
-        var deps = buildDependencies(cfg)
+        deps = buildDependencies(cfg)
         
         // Use Fake Stub Repository for tests (avoid requiring DDB)
         val fakeRepo = helpers.FakeStubRepository()
+        val fakeSessionRepo = helpers.FakeSessionRepository()
+        
         val testStubService = se.strawberry.service.stub.StubServiceImpl(
             se.strawberry.common.Json.mapper, 
             deps.wireMockClient, 
             fakeRepo
         )
-        deps = deps.copy(stubService = testStubService)
+        // Also inject FakeSessionRepository into deps so DynamicRoutingGuard uses it
+        deps = deps.copy(
+            stubService = testStubService,
+            sessionRepository = fakeSessionRepo
+        )
 
         val appScope = CoroutineScope(Dispatchers.Default)
         deps.trafficPersister.start(appScope)
 
-        val trafficListener = TrafficCaptureListener(deps.trafficPersister)
-        proxy = ServerBootstrap.start(trafficListener)
+        proxy = ServerBootstrap.start(cfg, deps)
 
         // Start Ktor API
         ktorApp = KtorBootstrap.start(cfg, deps)
@@ -103,10 +110,19 @@ abstract class BaseTest {
         }
     }
 
+    protected fun createSession(id: String) {
+        val session = se.strawberry.repository.session.SessionRepository.Session(
+            id = id,
+            createdAt = System.currentTimeMillis(),
+            expiresAt = System.currentTimeMillis() + 3600_000, // 1 hour
+            status = se.strawberry.repository.session.SessionRepository.Session.Status.ACTIVE
+        )
+        deps.sessionRepository.create(session)
+    }
 
-    fun call(sessionId: String?, endpoint: String): Response {
+    protected fun call(sessionId: String?, path: String, service: String = "httpbin"): okhttp3.Response {
         val req = Request.Builder()
-            .url("${proxyBaseUrl()}$endpoint")
+            .url("${proxyBaseUrl()}$path")
             .addHeader("X-Mock-Target-Service", upstreamServiceName)
             .apply { if (sessionId != null) addHeader("X-Mock-Session-Id", sessionId) }
             .build()

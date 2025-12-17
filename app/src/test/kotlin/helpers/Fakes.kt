@@ -30,3 +30,22 @@ class FakeStubRepository : StubRepository {
         return stubs.filter { it.status == StubRepository.Stub.Status.ACTIVE }
     }
 }
+
+class FakeSessionRepository : se.strawberry.repository.session.SessionRepository {
+    val sessions = mutableMapOf<String, se.strawberry.repository.session.SessionRepository.Session>()
+
+    override fun create(session: se.strawberry.repository.session.SessionRepository.Session): Boolean {
+        sessions[session.id] = session
+        return true
+    }
+
+    override fun get(id: String): se.strawberry.repository.session.SessionRepository.Session? {
+        return sessions[id]
+    }
+
+    override fun close(id: String): Boolean {
+        val s = sessions[id] ?: return false
+        sessions[id] = s.copy(status = se.strawberry.repository.session.SessionRepository.Session.Status.CLOSED)
+        return true
+    }
+}

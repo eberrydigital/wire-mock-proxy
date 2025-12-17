@@ -62,6 +62,7 @@ abstract class BaseIntegrationTest {
     protected lateinit var http: OkHttpClient
     protected lateinit var upstreamServiceName: String
     protected lateinit var dynamoClient: DynamoDbClient
+    protected lateinit var deps: se.strawberry.app.AppDependencies
 
     @SystemStub
     protected val env = EnvironmentVariables()
@@ -107,13 +108,13 @@ abstract class BaseIntegrationTest {
         env.set(EnvVar.ServiceMap.key, "$upstreamServiceName=${upstreamBaseUrl()}")
 
         // Start proxy (WireMock ingress)
+        // Start proxy (WireMock ingress)
         val cfg = AppConfigLoader.load()
-        val deps = buildDependencies(cfg)
+        deps = buildDependencies(cfg)
         val appScope = CoroutineScope(Dispatchers.Default)
         deps.trafficPersister.start(appScope)
 
-        val trafficListener = TrafficCaptureListener(deps.trafficPersister)
-        proxy = ServerBootstrap.start(trafficListener)
+        proxy = ServerBootstrap.start(cfg, deps)
 
         // Start Ktor API
         ktorApp = KtorBootstrap.start(cfg, deps)
@@ -148,6 +149,17 @@ abstract class BaseIntegrationTest {
 
     protected fun upstreamBaseUrl(): String = "http://localhost:${upstream.port()}"
     protected fun apiBaseUrl(): String = "http://localhost:${Env.int(EnvVar.KtorApiPort)}"
+
+    protected fun createSession(id: String) {
+        val session = se.strawberry.repository.session.SessionRepository.Session(
+            id = id,
+            createdAt = System.currentTimeMillis(),
+            expiresAt = System.currentTimeMillis() + 3600_000, 
+            status = se.strawberry.repository.session.SessionRepository.Session.Status.ACTIVE
+        )
+        // Use repository to create in DB (LocalStack)
+        deps.sessionRepository.create(session)
+    }
 
     /**
      * Setup environment variables for the test

@@ -21,7 +21,7 @@ class TestSessionHeaderRequired : BaseTest() {
                 )
         )
 
-        call(sessionId = null, endpoint = endpoint).use { resp ->
+        call(sessionId = null, path = endpoint).use { resp ->
             assertThat(resp.code, equalTo(400))
         }
     }

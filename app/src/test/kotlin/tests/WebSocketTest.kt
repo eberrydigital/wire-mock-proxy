@@ -18,6 +18,7 @@ class WebSocketTest : BaseTest() {
     @Test
     fun `should receive broadcasted traffic via websocket`() {
         val sessionId = "ws-session-1"
+        createSession(sessionId)
         val endpoint = "/api/ws-test"
         
         // Connect to WS
@@ -62,6 +63,8 @@ class WebSocketTest : BaseTest() {
     fun `should filter traffic by sessionId`() {
         val targetSession = "ws-filter-target"
         val otherSession = "ws-filter-ignored"
+        createSession(targetSession)
+        createSession(otherSession)
         val endpoint = "/api/ws-filter"
         
         val messages = mutableListOf<String>()

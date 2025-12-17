@@ -4,14 +4,12 @@ package se.strawberry.app
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock.*
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration.options
-import com.github.tomakehurst.wiremock.extension.ServeEventListener
 import org.slf4j.LoggerFactory
 import se.strawberry.admin.ServerRef
 import se.strawberry.common.Headers.X_MOCK_TARGET_SERVICE
 import se.strawberry.common.Json
 import se.strawberry.common.Priorities.PROXY_FALLBACK
 import se.strawberry.config.AppConfig
-import se.strawberry.config.AppConfigLoader
 import se.strawberry.wiremock.filters.DynamicRoutingGuard
 import se.strawberry.wiremock.listeners.EphemeralServeEventListener
 import se.strawberry.wiremock.matchers.TtlGuardMatcher
@@ -22,8 +20,9 @@ object ServerBootstrap {
     private val log = LoggerFactory.getLogger(ServerBootstrap::class.java)
     val mapper = Json.mapper
 
-    fun start(trafficListener: ServeEventListener): WireMockServer {
-        val cfg: AppConfig = AppConfigLoader.load()
+    fun start(cfg: AppConfig, deps: AppDependencies): WireMockServer {
+        val trafficListener = se.strawberry.wiremock.listeners.TrafficCaptureListener(deps.trafficPersister)
+        
         val server = WireMockServer(
             options()
                 .port(cfg.wireMockServerPort)
@@ -34,7 +33,7 @@ object ServerBootstrap {
                 // 2) EphemeralServeEventListener — decrement uses/TTL, remove stubs if needed.
                 // 3) ServiceTemplateHelpers — helper functions for response templating.
                 .extensions(
-                    DynamicRoutingGuard(cfg.services, cfg.allowedPorts),
+                    DynamicRoutingGuard(cfg.services, cfg.allowedPorts, deps.sessionRepository),
                     TtlGuardMatcher(),
                     EphemeralServeEventListener(),
                     trafficListener,

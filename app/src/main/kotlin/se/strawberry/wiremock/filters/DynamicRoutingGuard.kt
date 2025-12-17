@@ -14,9 +14,12 @@ import se.strawberry.common.Paths.UI_ASSETS_PREFIX
 import se.strawberry.common.Paths.UI_ROOT
 import java.net.URI
 
+import se.strawberry.repository.session.SessionRepository
+
 class DynamicRoutingGuard(
     private val services: Map<String, URI>,
-    private val allowedPorts: Set<Int>
+    private val allowedPorts: Set<Int>,
+    private val sessionRepository: SessionRepository
 ) : StubRequestFilterV2 {
 
     private val log = LoggerFactory.getLogger(javaClass)
@@ -39,6 +42,17 @@ class DynamicRoutingGuard(
         val sessionId = if (sessionHeader.isPresent) sessionHeader.firstValue() else null
         if (sessionId.isNullOrBlank()) {
             return deny(400, "missing-session", "Header ${Headers.X_MOCK_SESSION_ID} is required")
+        }
+
+        val session = sessionRepository.get(sessionId)
+        if (session == null) {
+            return deny(403, "invalid-session", "Session not found")
+        }
+        if (session.status != se.strawberry.repository.session.SessionRepository.Session.Status.ACTIVE) {
+            return deny(403, "session-closed", "Session is closed")
+        }
+        if (session.expiresAt != null && session.expiresAt < System.currentTimeMillis()) {
+            return deny(403, "session-expired", "Session has expired")
         }
 
         val origin = services[serviceName]

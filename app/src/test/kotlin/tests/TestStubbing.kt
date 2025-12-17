@@ -20,6 +20,7 @@ class TestStubbingOnlyWorksWithinTheSameSession : BaseTest() {
         val endpoint = "/api/test"
         val stubStatus = 200
         val sessionId = Random.hashCode().toString()
+        createSession(sessionId)
 
         upstream.stubFor(
             get(urlEqualTo(endpoint))
@@ -56,9 +57,9 @@ class TestStubbingOnlyWorksWithinTheSameSession : BaseTest() {
             assertThat(responseForCalWithKnownSession.code, equalTo(stubStatus))
             assertThat(responseForCalWithKnownSession.body.string(), equalTo(stubBody))
         }
+        // Unknown session should be rejected (Hardened Logic)
         call("unknown", endpoint).use { responseWithUnknownSession ->
-            assertThat(responseWithUnknownSession.code, equalTo(upstreamStatus))
-            assertThat(responseWithUnknownSession.body.string(), equalTo(upstreamBody))
+            assertThat(responseWithUnknownSession.code, equalTo(403))
         }
     }
 }

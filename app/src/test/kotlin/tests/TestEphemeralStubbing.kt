@@ -19,6 +19,11 @@ class TestEphemeralStubbing : BaseTest() {
     val stubStatus = 200
     val sessionId = "A-123"
 
+    @org.junit.jupiter.api.BeforeEach
+    fun createTestSession() {
+        createSession(sessionId)
+    }
+
     @Test
     @DecisionTableId("EPH_1")
     fun shouldIgnoreTtlWhenUsesIsSetAndTtlIsNull() {
