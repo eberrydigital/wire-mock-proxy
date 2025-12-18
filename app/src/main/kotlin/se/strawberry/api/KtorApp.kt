@@ -147,6 +147,7 @@ fun Application.mockGateway() {
         webSocket(Endpoints.Paths.WS_TRAFFIC) {
             val id = UUID.randomUUID().toString()
             val broadcastService = dependencies.trafficBroadcastService
+            val sessionRepo = dependencies.sessionRepository
             try {
                 // Register session
                 broadcastService.addSession(id) { json ->
@@ -160,6 +161,27 @@ fun Application.mockGateway() {
                         try {
                             val node = dependencies.mapper.readTree(text)
                             val sessionId = node.get("sessionId")?.asText()?.takeIf { it.isNotBlank() }
+                            
+                            // Validate session if provided
+                            if (sessionId != null) {
+                                val session = sessionRepo.get(sessionId)
+                                if (session == null) {
+                                    send(Frame.Text("""{"error":"invalid_session","message":"Session not found"}"""))
+                                    close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, "Session not found"))
+                                    return@consumeEach
+                                }
+                                if (session.status != SessionRepository.Session.Status.ACTIVE) {
+                                    send(Frame.Text("""{"error":"session_closed","message":"Session is closed"}"""))
+                                    close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, "Session is closed"))
+                                    return@consumeEach
+                                }
+                                if (session.expiresAt != null && session.expiresAt < System.currentTimeMillis()) {
+                                    send(Frame.Text("""{"error":"session_expired","message":"Session has expired"}"""))
+                                    close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, "Session has expired"))
+                                    return@consumeEach
+                                }
+                            }
+                            
                             broadcastService.updateFilter(id, sessionId)
                         } catch (e: Exception) {
                             send(Frame.Text("""{"error":"invalid_filter_json"}"""))

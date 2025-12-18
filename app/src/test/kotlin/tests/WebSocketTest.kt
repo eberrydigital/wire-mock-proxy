@@ -2,16 +2,14 @@ package tests
 
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
-import okio.ByteString
-import org.junit.jupiter.api.Test
-import tests.setup.BaseTest
-import se.strawberry.config.Env
-import se.strawberry.config.EnvVar
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.*
-import se.strawberry.common.Headers
+import org.junit.jupiter.api.Test
+import se.strawberry.config.Env
+import se.strawberry.config.EnvVar
+import tests.setup.BaseTest
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
 class WebSocketTest : BaseTest() {
 
@@ -110,5 +108,49 @@ class WebSocketTest : BaseTest() {
         assertThat("Should not receive other session traffic", leaked, `is`(false))
         
         ws.close(1000, "done")
+    }
+
+    @Test
+    fun `should reject closed session filter`() {
+        val sessionId = "ws-closed-session"
+        createSession(sessionId)
+        
+        // Close the session
+        deps.sessionRepository.close(sessionId)
+        
+        val messages = mutableListOf<String>()
+        val closeLatch = CountDownLatch(1)
+        val wsUrl = "ws://localhost:${Env.int(EnvVar.KtorApiPort)}/_proxy-api/ws/traffic"
+        
+        val wsListener = object : WebSocketListener() {
+            override fun onMessage(webSocket: WebSocket, text: String) {
+                messages.add(text)
+            }
+            
+            override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
+                closeLatch.countDown()
+            }
+            
+            override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
+                closeLatch.countDown()
+            }
+        }
+        
+        val ws = http.newWebSocket(okhttp3.Request.Builder().url(wsUrl).build(), wsListener)
+        
+        Thread.sleep(500) // Wait for connection
+        
+        // Try to set filter to closed session
+        val filterCmd = """{"sessionId": "$sessionId"}"""
+        ws.send(filterCmd)
+        
+        // Wait for connection to close
+        val closed = closeLatch.await(5, TimeUnit.SECONDS)
+        assertThat("WebSocket should have closed", closed, `is`(true))
+        
+        // Verify error message was sent before closing
+        val errorMsg = messages.firstOrNull { it.contains("error") }
+        assertThat("Error message should exist", errorMsg, notNullValue())
+        assertThat("Error should indicate session is closed", errorMsg, containsString("session_closed"))
     }
 }

@@ -128,7 +128,7 @@ abstract class BaseTest {
         deps.sessionRepository.create(session)
     }
 
-    protected fun call(sessionId: String?, path: String, service: String = "httpbin"): okhttp3.Response {
+    protected fun call(sessionId: String?, path: String): okhttp3.Response {
         val req = Request.Builder()
             .url("${proxyBaseUrl()}$path")
             .addHeader("X-Mock-Target-Service", upstreamServiceName)

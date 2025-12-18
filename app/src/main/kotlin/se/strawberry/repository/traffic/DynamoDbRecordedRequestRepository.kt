@@ -13,7 +13,7 @@ class DynamoDbRecordedRequestRepository(
 ) : RecordedRequestRepository {
 
     private val log = LoggerFactory.getLogger(javaClass)
-    private val maxBodySize = 350 * 1024 // 350 KB
+    private val maxBodySize = 350 * 1024 // 400Kb is the limit for a DDB record
     private val truncationSuffix = "\n[...Body truncated - size limit exceeded...]"
 
     override fun save(rr: RecordedRequest): Boolean {
@@ -71,23 +71,6 @@ class DynamoDbRecordedRequestRepository(
     }
 
     override fun get(id: String): RecordedRequest? {
-        // Since PK is sessionId and SK is timestamp, we cannot efficiently GET by ID alone involved a Scan or GSI.
-        // HOWEVER, the requirements/target architecture implies efficient access. Is ID unique globally? Yes (UUID).
-        // If we don't have a GSI on ID, this is expensive.
-        // For now, let's assume we might need a GSI or the caller provides sessionId.
-        // BUT the interface interface get(id: String) implies ID lookup.
-        // Requirement GAP: We need GSI on `id` or change interface to get(sessionId, id).
-        // Let's implement SCAN for now as a fallback (inefficient but correct) OR assume a GSI named "id-index".
-        
-        // Let's assume we scan or query GSI.
-        // Actually, for "Create Stub from Request", we usually know the session in the context.
-        // But the API `GET /traffic/{id}` doesn't pass session ID in path but maybe in header?
-        // Let's check RequestServiceImpl usage. It checks session IS from header.
-        
-        // Strategy: SCAN for now. It's bad but GSI setup is out of scope for this code commit unless I change IaaC.
-        // Wait, traffic list implies we show ID. 
-        // Let's assume GSI 'id-index' exists on 'id'.
-        
         try {
             val response = dynamoDb.query(QueryRequest.builder()
                 .tableName(tableName)
@@ -137,7 +120,9 @@ class DynamoDbRecordedRequestRepository(
     }
 
     // Helpers
-    private fun s(value: String?): AttributeValue = if (value != null) AttributeValue.builder().s(value).build() else AttributeValue.builder().s("").build() // DDB doesn't like null/empty S? actually it handles empty S? No, map values can be empty strings? 
+    private fun s(value: String?): AttributeValue = if (value != null) AttributeValue.builder().s(value).build() else AttributeValue.builder().s("").build()
+
+    // DDB doesn't like null/empty S? actually it handles empty S? No, map values can be empty strings?
     // Correction: Empty strings in DDB are allowed now? No, they used not to be. But AWS SDK v2?
     // Safer to use NULL if empty? Let's assume non-empty for now or NULL.
     // Actually safe helper:
