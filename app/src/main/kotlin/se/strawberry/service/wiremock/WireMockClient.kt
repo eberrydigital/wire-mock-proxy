@@ -9,6 +9,7 @@
         fun removeStub(stub: StubMapping)
         fun listStubs(): List<StubMapping>
         fun resetRequests()
+        fun editStub(mapping: StubMapping)
 
         fun listServeEvents(): List<ServeEvent>
         fun findServeEvent(id: String): ServeEvent?

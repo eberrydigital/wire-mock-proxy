@@ -9,6 +9,8 @@ import se.strawberry.service.traffic.TrafficBroadcastService
 import se.strawberry.service.traffic.TrafficPersister
 import se.strawberry.service.traffic.WebSocketTrafficBroadcaster
 import se.strawberry.service.wiremock.ServerWireMockClient
+import se.strawberry.service.wiremock.WireMockAdmin
+import se.strawberry.service.wiremock.WireMockAdminImpl
 import se.strawberry.service.wiremock.WireMockClient
 
 val serviceModule = module {
@@ -17,4 +19,5 @@ val serviceModule = module {
     single<WireMockClient> { ServerWireMockClient(get()) }
     single<StubService> { StubServiceImpl(get(), get(), get()) }
     single<RequestService> { RequestServiceImpl(get(), get()) }
+    single<WireMockAdmin> { WireMockAdminImpl(lazy { get<WireMockClient>() }) }
 }

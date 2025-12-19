@@ -16,7 +16,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.ExtendWith
 import se.strawberry.app.KtorBootstrap
-import se.strawberry.app.buildDependencies
 import se.strawberry.config.AppConfigLoader
 import se.strawberry.config.Env
 import se.strawberry.config.EnvVar

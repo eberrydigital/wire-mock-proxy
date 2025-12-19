@@ -22,7 +22,6 @@ val wiremockExtensionsModule = module {
 
     single { ServiceTemplateHelpers(get<AppConfig>().services) }
 
-    // Your current listener only needs TrafficPersister (based on your snippet)
     single { TrafficCaptureListener(get()) }
 
     // Needs cfg + sessionRepository

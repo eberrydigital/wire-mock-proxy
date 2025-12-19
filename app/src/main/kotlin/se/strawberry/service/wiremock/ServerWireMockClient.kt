@@ -27,5 +27,9 @@ class ServerWireMockClient(private val server: WireMockServer)  : WireMockClient
     override fun findServeEvent(id: String): ServeEvent? {
         return server.allServeEvents.find { it.id.toString() == id }
     }
+
+    override fun editStub(mapping: StubMapping) {
+        server.editStubMapping(mapping)
+    }
 }
 
