@@ -1,40 +1,55 @@
 package se.strawberry.app
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import org.koin.core.context.GlobalContext.startKoin
+import org.koin.core.context.GlobalContext.stopKoin
+import org.koin.java.KoinJavaComponent.getKoin
 import se.strawberry.config.AppConfigLoader
+import se.strawberry.di.*
 import se.strawberry.infrastructure.dynamo.DynamoBootstrap
-import se.strawberry.infrastructure.dynamo.DynamoClientFactory
 import se.strawberry.repository.RepositoryConstants.DYNAMO.SESSION_TABLE_NAME
 import se.strawberry.repository.RepositoryConstants.DYNAMO.STUB_TABLE_NAME
 import se.strawberry.repository.RepositoryConstants.DYNAMO.TRAFFIC_TABLE_NAME
+import se.strawberry.wiremock.WireMockBootstrap
+import se.strawberry.wiremock.WireMockLifecycle
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient
 
 fun main() {
-    val config = AppConfigLoader.load()
-    val deps = buildDependencies(config)
 
-    val dynamoClient = DynamoClientFactory.create(config.dynamo)
+    startKoin {
+        modules(
+            configModule,
+            infraModule,
+            repositoryModule,
+            serviceModule,
+            wiremockExtensionsModule,
+            wireMockServerModule,
+            wiremockRuntimeModule,
+        )
+    }
 
-    DynamoBootstrap.ensureSessionsTable(
-        dynamo = dynamoClient,
-        tableName = SESSION_TABLE_NAME
-    )
-    // Ensure DB tables
+    val koin = getKoin()
+    val dynamoClient = koin.get<DynamoDbClient>()
+
+    DynamoBootstrap.ensureSessionsTable(dynamo = dynamoClient, tableName = SESSION_TABLE_NAME)
     DynamoBootstrap.ensureTrafficTable(dynamoClient, TRAFFIC_TABLE_NAME)
     DynamoBootstrap.ensureStubsTable(dynamoClient, STUB_TABLE_NAME)
 
-    val appScope = CoroutineScope(Dispatchers.Default)
-    deps.trafficPersister.start(appScope)
+    val wireMockLifecycle = koin.get<WireMockLifecycle>()
+    val wireMockBootstrap = koin.get<WireMockBootstrap>()
 
-    val server = ServerBootstrap.start(config, deps)
-    
-    // Sync stubs from DB to WireMock
-    deps.stubService.syncFromDb()
+    wireMockLifecycle.start()
+    wireMockBootstrap.initFallbackProxy()
 
-    val ktor = KtorBootstrap.start(config, deps)
+    val config = AppConfigLoader.load()
+    val ktor = KtorBootstrap.start(cfg= config,  installKoin = false)
+
 
     Runtime.getRuntime().addShutdownHook(Thread {
-        ktor.stop(1000, 2000)
-        server.stop()
+        try {
+            ktor.stop(1000, 2000)
+        } finally {
+            wireMockLifecycle.stop()
+            stopKoin()
+        }
     })
 }

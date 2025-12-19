@@ -1,15 +1,17 @@
 package se.strawberry.wiremock.listeners
 
+import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.extension.Parameters
 import com.github.tomakehurst.wiremock.extension.ServeEventListener
 import com.github.tomakehurst.wiremock.stubbing.ServeEvent
 import com.github.tomakehurst.wiremock.common.Metadata
-import se.strawberry.admin.ServerRef
 import se.strawberry.common.ListenerNames
 import se.strawberry.common.MetadataKeys
 
 
-class EphemeralServeEventListener() : ServeEventListener {
+class EphemeralServeEventListener(
+    private val server: WireMockServer
+) : ServeEventListener {
 
     override fun getName(): String = ListenerNames.EPHEMERAL_LISTENER
 
@@ -30,14 +32,14 @@ class EphemeralServeEventListener() : ServeEventListener {
 
         val now = System.currentTimeMillis()
         if (expiresAtMs > 0 && now > expiresAtMs) {
-            ServerRef.server.removeStubMapping(mapping)
+            server.removeStubMapping(mapping)
             return
         }
 
         if (usesLeft > 0) {
             val next = usesLeft - 1
             if (next <= 0) {
-                ServerRef.server.removeStubMapping(mapping)
+                server.removeStubMapping(mapping)
             } else {
                 val newMd = Metadata.metadata()
                     .apply {
@@ -46,7 +48,7 @@ class EphemeralServeEventListener() : ServeEventListener {
                     }
                     .build()
                 mapping.metadata = newMd
-                ServerRef.server.editStubMapping(mapping)
+                server.editStubMapping(mapping)
             }
         }
     }

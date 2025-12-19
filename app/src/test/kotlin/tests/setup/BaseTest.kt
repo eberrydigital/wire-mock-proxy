@@ -16,7 +16,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.ExtendWith
 import se.strawberry.app.KtorBootstrap
-import se.strawberry.app.ServerBootstrap
 import se.strawberry.app.buildDependencies
 import se.strawberry.config.AppConfigLoader
 import se.strawberry.config.Env
@@ -36,7 +35,6 @@ abstract class BaseTest {
     protected lateinit var ktorApp: EmbeddedServer<NettyApplicationEngine, NettyApplicationEngine.Configuration>
     protected lateinit var http: OkHttpClient
     protected lateinit var upstreamServiceName: String
-    protected lateinit var deps: se.strawberry.app.AppDependencies
 
     @SystemStub
     protected val env = EnvironmentVariables()

@@ -1,31 +1,31 @@
 package se.strawberry.service.wiremock
 
+import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.stubbing.ServeEvent
 import com.github.tomakehurst.wiremock.stubbing.StubMapping
-import se.strawberry.admin.ServerRef
 
 
-class ServerWireMockClient : WireMockClient {
+class ServerWireMockClient(private val server: WireMockServer)  : WireMockClient {
     override fun addStub(stub: StubMapping) {
-        ServerRef.server.addStubMapping(stub)
+        server.addStubMapping(stub)
     }
 
     override fun removeStub(stub: StubMapping) {
-        ServerRef.server.removeStubMapping(stub)
+        server.removeStubMapping(stub)
     }
 
-    override fun listStubs(): List<StubMapping> = ServerRef.server.listAllStubMappings().mappings.toList()
+    override fun listStubs(): List<StubMapping> = server.listAllStubMappings().mappings.toList()
 
     override fun resetRequests() {
-        ServerRef.server.resetRequests()
+        server.resetRequests()
     }
 
     override fun listServeEvents(): List<ServeEvent> {
-        return ServerRef.server.allServeEvents
+        return server.allServeEvents
     }
 
     override fun findServeEvent(id: String): ServeEvent? {
-        return ServerRef.server.allServeEvents.find { it.id.toString() == id }
+        return server.allServeEvents.find { it.id.toString() == id }
     }
 }
 

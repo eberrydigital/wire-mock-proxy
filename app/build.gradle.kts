@@ -61,6 +61,9 @@ dependencies {
     implementation("io.ktor:ktor-server-content-negotiation-jvm:$ktorVersion")
     implementation("io.ktor:ktor-client-core-jvm:$ktorVersion")
     implementation("io.ktor:ktor-client-java:$ktorVersion")
+    implementation(platform("io.insert-koin:koin-bom:4.0.3"))
+    implementation("io.insert-koin:koin-ktor")
+    implementation("io.insert-koin:koin-logger-slf4j")
     implementation("io.ktor:ktor-serialization-jackson-jvm:$ktorVersion")
     testImplementation("io.ktor:ktor-server-test-host-jvm:$ktorVersion")
 

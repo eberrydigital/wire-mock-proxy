@@ -17,7 +17,6 @@ import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
 import org.testcontainers.utility.DockerImageName
 import se.strawberry.app.KtorBootstrap
-import se.strawberry.app.ServerBootstrap
 import se.strawberry.app.buildDependencies
 import se.strawberry.config.AppConfigLoader
 import se.strawberry.config.Env
