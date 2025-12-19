@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WireMock Proxy E2E</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .card {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            background: #ccc;
+        }
+
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            overflow-x: auto;
+        }
+
+        .log-entry {
+            border-bottom: 1px solid #eee;
+            padding: 5px 0;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        .status-badge {
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+
+        .status-200 {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-403 {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>WireMock Proxy E2E Tester</h1>
+
+    <div class="card">
+        <h2>1. Session Management</h2>
+        <div id="sessionParams">
+            <input type="text" id="devName" placeholder="Developer Name" value="e2e-tester">
+            <button onclick="createSession()" id="createSessionBtn">Create Session</button>
+        </div>
+        <div id="activeSession" style="display:none; margin-top: 10px;">
+            <p><strong>Active Session ID:</strong> <code id="sessionIdDisplay"></code></p>
+            <p>Expires: <span id="sessionExpiry"></span></p>
+            <button onclick="closeSession()" style="background: #dc3545;">Close Session</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>2. Make Request</h2>
+        <p>Send a request through the proxy to the target service (httpbin).</p>
+        <div>
+            <select id="requestMethod">
+                <option value="GET">GET</option>
+                <option value="POST">POST</option>
+                <option value="PATCH" selected>PATCH</option>
+                <option value="PUT">PUT</option>
+                <option value="DELETE">DELETE</option>
+            </select>
+            <select id="targetService">
+                <option value="test_precondition" selected>test_precondition</option>
+            </select>
+            <input type="text" id="requestPath" value="/user/data" placeholder="/path">
+            <button onclick="sendRequest()" id="sendReqBtn" disabled>Send Request</button>
+            <button onclick="sendRequest('unknown')" style="background: #6c757d;">Send with Invalid Session</button>
+        </div>
+        <div id="responseArea" style="margin-top: 10px;">
+            <pre id="responseOutput">Response will appear here...</pre>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>3. Live Traffic Log (WebSocket)</h2>
+        <div id="wsStatus">Connecting...</div>
+        <div id="trafficLog" style="max-height: 300px; overflow-y: auto;">
+            <!-- Logs go here -->
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
