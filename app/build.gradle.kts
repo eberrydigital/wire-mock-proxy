@@ -72,6 +72,16 @@ dependencies {
 
     // .env file support
     implementation("io.github.cdimascio:dotenv-kotlin:6.4.2")
+
+    // Koin core
+    val koinVersion = "4.0.0"
+    implementation("io.insert-koin:koin-core:$koinVersion")
+    implementation("io.insert-koin:koin-ktor:$koinVersion")
+    implementation("io.insert-koin:koin-logger-slf4j:$koinVersion")
+
+    // Koin test
+    testImplementation("io.insert-koin:koin-test:$koinVersion")
+    testImplementation("io.insert-koin:koin-test-junit5:$koinVersion")
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
